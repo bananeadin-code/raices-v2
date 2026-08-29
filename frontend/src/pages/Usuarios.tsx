@@ -1,0 +1,119 @@
+import { useEffect, useState } from 'react';
+import { api } from '../api/client';
+import { UsuarioRow, Rol, Sucursal } from '../types';
+import { DataTable, Column } from '../components/DataTable';
+import { Modal } from '../components/Modal';
+import { SearchBar } from '../components/SearchBar';
+import { Pager } from '../components/Pager';
+import { usePagedList } from '../hooks/usePagedList';
+import { useAuth } from '../auth/AuthContext';
+
+type Form = Partial<UsuarioRow> & { password?: string };
+const VACIO: Form = { usuario: '', nombre: '', password: '' };
+
+export function Usuarios() {
+  const { puede } = useAuth();
+  const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<UsuarioRow>('/usuarios');
+  const [roles, setRoles] = useState<Rol[]>([]);
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState<Form>(VACIO);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get<Rol[]>('/roles').then(setRoles).catch(() => {});
+    api.getAll<Sucursal>('/sucursales').then(setSucursales).catch(() => {});
+  }, []);
+
+  function nuevo() { setError(''); setForm(VACIO); setModal(true); }
+  function editar(u: UsuarioRow) { setError(''); setForm({ ...u, password: '' }); setModal(true); }
+
+  async function guardar() {
+    setError('');
+    const payload: any = {
+      usuario: form.usuario,
+      nombre: form.nombre,
+      apellidos: form.apellidos || null,
+      email: form.email || null,
+      telefono: form.telefono || null,
+      rol_id: form.rol_id,
+      sucursal_id: form.sucursal_id ?? null,
+    };
+    if (form.password) payload.password = form.password;
+    try {
+      if (form.id) await api.put(`/usuarios/${form.id}`, payload);
+      else await api.post('/usuarios', payload);
+      setModal(false); await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al guardar');
+    }
+  }
+  async function eliminar(u: UsuarioRow) {
+    if (!confirm(`¿Desactivar a ${u.nombre}?`)) return;
+    try {
+      await api.del(`/usuarios/${u.id}`); await reload();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'No se pudo desactivar');
+    }
+  }
+
+  const columns: Column<UsuarioRow>[] = [
+    { header: 'Usuario', render: (u) => u.usuario },
+    { header: 'Nombre', render: (u) => `${u.nombre} ${u.apellidos ?? ''}`.trim() },
+    { header: 'Rol', render: (u) => u.rol ?? '' },
+    { header: 'Sucursal', render: (u) => u.sucursal ?? '' },
+  ];
+
+  return (
+    <section>
+      <div className="page-head">
+        <h1>Usuarios</h1>
+        {puede('usuarios:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+      </div>
+      <div className="list-toolbar">
+        <SearchBar onBuscar={buscar} placeholder="Buscar usuario..." />
+      </div>
+      <DataTable columns={columns} rows={rows}
+        onEdit={puede('usuarios:editar') ? editar : undefined}
+        onDelete={puede('usuarios:eliminar') ? eliminar : undefined} />
+      <Pager page={page} pageSize={pageSize} total={total} onPage={setPage} />
+
+      <Modal abierto={modal} titulo={form.id ? 'Editar usuario' : 'Nuevo usuario'}
+        onCerrar={() => setModal(false)} onGuardar={guardar}>
+        <label>Usuario
+          <input value={form.usuario ?? ''} onChange={(e) => setForm({ ...form, usuario: e.target.value })} />
+        </label>
+        <label>Nombre
+          <input value={form.nombre ?? ''} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+        </label>
+        <label>Apellidos
+          <input value={form.apellidos ?? ''} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} />
+        </label>
+        <label>Correo
+          <input value={form.email ?? ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        </label>
+        <label>Teléfono
+          <input value={form.telefono ?? ''} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
+        </label>
+        <label>{form.id ? 'Contraseña (dejar vacía para no cambiar)' : 'Contraseña'}
+          <input type="password" autoComplete="new-password" value={form.password ?? ''} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        </label>
+        <label>Rol
+          <select value={form.rol_id ?? ''}
+            onChange={(e) => setForm({ ...form, rol_id: e.target.value === '' ? undefined : Number(e.target.value) })}>
+            <option value="">— Selecciona —</option>
+            {roles.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+          </select>
+        </label>
+        <label>Sucursal
+          <select value={form.sucursal_id ?? ''}
+            onChange={(e) => setForm({ ...form, sucursal_id: e.target.value === '' ? null : Number(e.target.value) })}>
+            <option value="">— Sin asignar —</option>
+            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+          </select>
+        </label>
+        {error && <p className="error">{error}</p>}
+      </Modal>
+    </section>
+  );
+}

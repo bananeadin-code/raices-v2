@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: raices_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: raices_v2
+      MYSQL_USER: raices
+      MYSQL_PASSWORD: raices
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      # Carga el esquema automáticamente en la primera creación del contenedor
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command: --default-authentication-plugin=caching_sha2_password
+
+  adminer:
+    image: adminer
+    container_name: raices_adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  dbdata:
