@@ -7,11 +7,13 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Categoria> = { nombre: '' };
 
 export function Categorias() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Categoria>('/categorias');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Partial<Categoria>>(VACIO);
@@ -24,13 +26,13 @@ export function Categorias() {
     try {
       if (form.id) await api.put(`/categorias/${form.id}`, form);
       else await api.post('/categorias', form);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
   }
   async function eliminar(c: Categoria) {
     if (!confirm(`¿Eliminar "${c.nombre}"?`)) return;
-    try { await api.del(`/categorias/${c.id}`); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo eliminar'); }
+    try { await api.del(`/categorias/${c.id}`); await reload(); toast.exito('Eliminado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo eliminar'); }
   }
 
   const columns: Column<Categoria>[] = [{ header: 'Nombre', render: (c) => c.nombre }];

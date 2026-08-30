@@ -12,13 +12,17 @@ const SELECT =
   'FROM usuarios u JOIN roles r ON r.id = u.rol_id ' +
   'LEFT JOIN sucursales s ON s.id = u.sucursal_id';
 
-export async function listar(p: PageParams) {
+export async function listar(p: PageParams, soloInactivos = false) {
   return paged({
     select: 'u.id, u.usuario, u.nombre, u.apellidos, u.email, u.telefono, u.rol_id, r.nombre AS rol, u.sucursal_id, s.nombre AS sucursal, u.activo',
     from: 'usuarios u JOIN roles r ON r.id = u.rol_id LEFT JOIN sucursales s ON s.id = u.sucursal_id',
-    where: 'u.activo = 1', search: { col: 'u.nombre', q: p.q }, order: 'u.nombre',
+    where: soloInactivos ? 'u.activo = 0' : 'u.activo = 1', search: { col: 'u.nombre', q: p.q }, order: 'u.nombre',
     page: p.page, pageSize: p.pageSize,
   });
+}
+
+export async function reactivar(id: number) {
+  await pool.query('UPDATE usuarios SET activo = 1 WHERE id = ?', [id]);
 }
 
 export async function obtener(id: number) {

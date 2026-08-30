@@ -39,11 +39,22 @@ export async function getPermisos(rolId: number) {
 }
 
 // Reemplaza todos los permisos del rol (borra y reinserta) en una transacción.
-export async function setPermisos(rolId: number, permisos: PermisoItem[]) {
+export async function setPermisos(rolId: number, permisos: PermisoItem[], requesterUserId: number) {
   await obtener(rolId); // valida que el rol exista
+
+  // Anti auto-bloqueo: si editas los permisos de TU PROPIO rol, no puedes quitarte
+  // el acceso a Roles (si no, quedarías sin poder administrar permisos).
+  const req = await query<{ rol_id: number }>('SELECT rol_id FROM usuarios WHERE id = ?', [requesterUserId]);
+  const items: PermisoItem[] = permisos.map((p) => ({ ...p }));
+  if (req[0]?.rol_id === rolId) {
+    let roles = items.find((p) => p.modulo === 'roles');
+    if (!roles) { roles = { modulo: 'roles', ver: false, crear: false, editar: false, eliminar: false }; items.push(roles); }
+    roles.ver = true; roles.editar = true;
+  }
+
   await withTransaction(async (cx) => {
     await cx.query('DELETE FROM rol_permisos WHERE rol_id = ?', [rolId]);
-    const rows = permisos
+    const rows = items
       .filter((p) => p.ver || p.crear || p.editar || p.eliminar)
       .map((p) => [rolId, p.modulo, p.ver ? 1 : 0, p.crear ? 1 : 0, p.editar ? 1 : 0, p.eliminar ? 1 : 0]);
     if (rows.length) {

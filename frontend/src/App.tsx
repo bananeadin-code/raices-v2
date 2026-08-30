@@ -1,6 +1,9 @@
 import { ReactElement } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import { ToastProvider } from './components/Toast';
+import { TopLoader } from './components/TopLoader';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './layout/Layout';
 import { Login } from './pages/Login';
 import { Clientes } from './pages/Clientes';
@@ -12,6 +15,7 @@ import { Usuarios } from './pages/Usuarios';
 import { Roles } from './pages/Roles';
 import { Inventario } from './pages/Inventario';
 import { Produccion } from './pages/Produccion';
+import { Bitacora } from './pages/Bitacora';
 import { EnConstruccion } from './pages/EnConstruccion';
 
 function Privado({ children }: { children: ReactElement }) {
@@ -22,7 +26,9 @@ function Privado({ children }: { children: ReactElement }) {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <ToastProvider>
+      <TopLoader />
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -31,6 +37,7 @@ export default function App() {
             element={
               <Privado>
                 <Layout>
+                  <ErrorBoundary>
                   <Routes>
                     <Route path="/" element={<Navigate to="/clientes" replace />} />
 
@@ -59,14 +66,17 @@ export default function App() {
 
                     {/* Administración (por construir) */}
                     <Route path="/reportes" element={<EnConstruccion nombre="Reportes" />} />
+                    <Route path="/bitacora" element={<Bitacora />} />
                     <Route path="/supervision" element={<EnConstruccion nombre="Supervisión" />} />
                   </Routes>
+                  </ErrorBoundary>
                 </Layout>
               </Privado>
             }
           />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

@@ -8,17 +8,19 @@ import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { KardexModal } from '../components/KardexModal';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 interface Existencia {
   id: number;
   sucursal_id: number; sucursal: string; item_id: number; item: string;
-  categoria?: string | null; unidad?: string | null;
+  categoria?: string | null; unidad?: string | null; minimo?: number | null;
   cantidad: number; reservado: number; disponible: number;
 }
 interface Item { id: number; nombre: string; }
 
 export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
   const { puede } = useAuth();
+  const toast = useToast();
   const [filtroSuc, setFiltroSuc] = useState('');
   const path = `/inventario/existencias?item_tipo=${tipo}` + (filtroSuc ? `&sucursal_id=${filtroSuc}` : '');
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Existencia>(path);
@@ -51,7 +53,7 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
         tipo: mov.tipo, item_tipo: tipo, item_id: Number(mov.item_id),
         sucursal_id: Number(mov.sucursal_id), cantidad: Number(mov.cantidad), motivo: mov.motivo || null,
       });
-      setModalMov(false); await reload();
+      setModalMov(false); await reload(); toast.exito('Movimiento registrado');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
     }
@@ -64,7 +66,7 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
         sucursal_origen: Number(tras.sucursal_origen), sucursal_destino: Number(tras.sucursal_destino),
         cantidad: Number(tras.cantidad), motivo: tras.motivo || null,
       });
-      setModalTras(false); await reload();
+      setModalTras(false); await reload(); toast.exito('Traspaso realizado');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
     }
@@ -76,9 +78,20 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
     tipo === 'articulo'
       ? { header: 'Categoría', render: (e: Existencia) => e.categoria ?? '' }
       : { header: 'Unidad', render: (e: Existencia) => e.unidad ?? '' },
-    { header: 'Cantidad', render: (e) => Number(e.cantidad).toLocaleString() },
-    { header: 'Reservado', render: (e) => Number(e.reservado).toLocaleString() },
-    { header: 'Disponible', render: (e) => Number(e.disponible).toLocaleString() },
+    { header: 'Cantidad', align: 'right', render: (e) => Number(e.cantidad).toLocaleString() },
+    { header: 'Reservado', align: 'right', render: (e) => Number(e.reservado).toLocaleString() },
+    {
+      header: 'Disponible', align: 'right',
+      render: (e) => {
+        const bajo = e.minimo != null && Number(e.minimo) > 0 && Number(e.disponible) < Number(e.minimo);
+        return (
+          <span>
+            {Number(e.disponible).toLocaleString()}
+            {bajo && <span className="badge badge-danger" style={{ marginLeft: 6 }}>Bajo mínimo</span>}
+          </span>
+        );
+      },
+    },
     { header: '', render: (e) => <button className="btn-sm" onClick={() => setKardex(e)}>Movimientos</button> },
   ];
 

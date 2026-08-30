@@ -44,6 +44,7 @@ const MENU: MenuGrupo[] = [
     items: [
       { to: '/reportes', label: 'Reportes', permiso: 'reportes:ver', icon: 'chart' },
       { to: '/roles', label: 'Roles y Permisos', permiso: 'roles:ver', icon: 'shield' },
+      { to: '/bitacora', label: 'Bitácora', permiso: 'bitacora:ver', icon: 'file' },
       { to: '/supervision', label: 'Supervisión', permiso: 'supervision:ver', icon: 'eye' },
     ],
   },

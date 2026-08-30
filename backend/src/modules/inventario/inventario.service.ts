@@ -81,8 +81,8 @@ export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParam
     ? 'existencias e JOIN sucursales s ON s.id = e.sucursal_id JOIN articulos a ON a.id = e.articulo_id LEFT JOIN categorias c ON c.id = a.categoria_id'
     : 'existencias e JOIN sucursales s ON s.id = e.sucursal_id JOIN materias m ON m.id = e.materia_id';
   const select = isArt
-    ? 'e.id, e.sucursal_id, s.nombre AS sucursal, e.articulo_id AS item_id, a.nombre AS item, c.nombre AS categoria, e.cantidad, e.reservado, (e.cantidad - e.reservado) AS disponible'
-    : 'e.id, e.sucursal_id, s.nombre AS sucursal, e.materia_id AS item_id, m.nombre AS item, m.unidad, e.cantidad, e.reservado, (e.cantidad - e.reservado) AS disponible';
+    ? 'e.id, e.sucursal_id, s.nombre AS sucursal, e.articulo_id AS item_id, a.nombre AS item, c.nombre AS categoria, a.minimo, e.cantidad, e.reservado, (e.cantidad - e.reservado) AS disponible'
+    : 'e.id, e.sucursal_id, s.nombre AS sucursal, e.materia_id AS item_id, m.nombre AS item, m.unidad, m.minimo, e.cantidad, e.reservado, (e.cantidad - e.reservado) AS disponible';
   const clauses = [isArt ? 'e.articulo_id IS NOT NULL' : 'e.materia_id IS NOT NULL'];
   const whereParams: any[] = [];
   if (sucursalId) { clauses.push('e.sucursal_id = ?'); whereParams.push(sucursalId); }

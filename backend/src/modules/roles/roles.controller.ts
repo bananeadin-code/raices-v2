@@ -22,5 +22,5 @@ export async function getPermisos(req: Request, res: Response) {
   res.json(await service.getPermisos(Number(req.params.id)));
 }
 export async function setPermisos(req: Request, res: Response) {
-  res.json(await service.setPermisos(Number(req.params.id), permisosSet.parse(req.body)));
+  res.json(await service.setPermisos(Number(req.params.id), permisosSet.parse(req.body), req.user!.id));
 }

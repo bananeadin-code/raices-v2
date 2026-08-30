@@ -9,6 +9,7 @@ import usuariosRoutes from './modules/usuarios/usuarios.routes';
 import rolesRoutes from './modules/roles/roles.routes';
 import inventarioRoutes from './modules/inventario/inventario.routes';
 import produccionRoutes from './modules/produccion/produccion.routes';
+import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/roles', rolesRoutes);
 // Inventario y producción
 router.use('/inventario', inventarioRoutes);
 router.use('/produccion', produccionRoutes);
+router.use('/bitacora', bitacoraRoutes);
 
 // Conforme construyas cada módulo, móntalo aquí:
 // router.use('/pos', posRoutes);

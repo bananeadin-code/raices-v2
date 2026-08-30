@@ -7,13 +7,17 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 type Form = Partial<UsuarioRow> & { password?: string };
 const VACIO: Form = { usuario: '', nombre: '', password: '' };
 
 export function Usuarios() {
   const { puede } = useAuth();
-  const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<UsuarioRow>('/usuarios');
+  const toast = useToast();
+  const [inactivos, setInactivos] = useState(false);
+  const { data: rows, total, page, setPage, buscar, pageSize, reload } =
+    usePagedList<UsuarioRow>(inactivos ? '/usuarios?inactivos=1' : '/usuarios');
   const [roles, setRoles] = useState<Rol[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [modal, setModal] = useState(false);
@@ -43,7 +47,7 @@ export function Usuarios() {
     try {
       if (form.id) await api.put(`/usuarios/${form.id}`, payload);
       else await api.post('/usuarios', payload);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
     }
@@ -51,10 +55,14 @@ export function Usuarios() {
   async function eliminar(u: UsuarioRow) {
     if (!confirm(`¿Desactivar a ${u.nombre}?`)) return;
     try {
-      await api.del(`/usuarios/${u.id}`); await reload();
+      await api.del(`/usuarios/${u.id}`); await reload(); toast.exito('Usuario desactivado');
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'No se pudo desactivar');
+      toast.error(e instanceof Error ? e.message : 'No se pudo desactivar');
     }
+  }
+  async function reactivar(u: UsuarioRow) {
+    try { await api.put(`/usuarios/${u.id}/reactivar`, {}); await reload(); toast.exito('Usuario reactivado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo reactivar'); }
   }
 
   const columns: Column<UsuarioRow>[] = [
@@ -62,6 +70,13 @@ export function Usuarios() {
     { header: 'Nombre', render: (u) => `${u.nombre} ${u.apellidos ?? ''}`.trim() },
     { header: 'Rol', render: (u) => u.rol ?? '' },
     { header: 'Sucursal', render: (u) => u.sucursal ?? '' },
+    ...(inactivos
+      ? [{
+          header: 'Acciones',
+          render: (u: UsuarioRow) => (puede('usuarios:editar')
+            ? <button className="btn-sm btn-primary" onClick={() => reactivar(u)}>Reactivar</button> : null),
+        }]
+      : []),
   ];
 
   return (
@@ -72,10 +87,14 @@ export function Usuarios() {
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar usuario..." />
+        <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <input type="checkbox" checked={inactivos} onChange={(e) => setInactivos(e.target.checked)} style={{ width: 'auto' }} />
+          Ver inactivos
+        </label>
       </div>
       <DataTable columns={columns} rows={rows}
-        onEdit={puede('usuarios:editar') ? editar : undefined}
-        onDelete={puede('usuarios:eliminar') ? eliminar : undefined} />
+        onEdit={!inactivos && puede('usuarios:editar') ? editar : undefined}
+        onDelete={!inactivos && puede('usuarios:eliminar') ? eliminar : undefined} />
       <Pager page={page} pageSize={pageSize} total={total} onPage={setPage} />
 
       <Modal abierto={modal} titulo={form.id ? 'Editar usuario' : 'Nuevo usuario'}

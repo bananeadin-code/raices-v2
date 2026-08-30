@@ -4,6 +4,7 @@ import { Rol } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 // Módulos del sistema para la matriz de permisos.
 const MODULOS = [
@@ -37,6 +38,7 @@ function permisosVacios(): Record<string, Acciones> {
 
 export function Roles() {
   const { puede } = useAuth();
+  const toast = useToast();
   const [rows, setRows] = useState<Rol[]>([]);
   const [modalEdit, setModalEdit] = useState(false);
   const [modalPerm, setModalPerm] = useState(false);
@@ -55,7 +57,7 @@ export function Roles() {
     try {
       if (form.id) await api.put(`/roles/${form.id}`, form);
       else await api.post('/roles', form);
-      setModalEdit(false); await cargar();
+      setModalEdit(false); await cargar(); toast.exito('Guardado');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
     }
@@ -63,9 +65,9 @@ export function Roles() {
   async function eliminar(r: Rol) {
     if (!confirm(`¿Eliminar el rol "${r.nombre}"?`)) return;
     try {
-      await api.del(`/roles/${r.id}`); await cargar();
+      await api.del(`/roles/${r.id}`); await cargar(); toast.exito('Rol eliminado');
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'No se pudo eliminar');
+      toast.error(e instanceof Error ? e.message : 'No se pudo eliminar');
     }
   }
 
@@ -85,9 +87,9 @@ export function Roles() {
     const payload = MODULOS.map((m) => ({ modulo: m.key, ...permisos[m.key] }));
     try {
       await api.put(`/roles/${rolActual.id}/permisos`, payload);
-      setModalPerm(false);
+      setModalPerm(false); toast.exito('Permisos guardados');
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'No se pudieron guardar los permisos');
+      toast.error(e instanceof Error ? e.message : 'No se pudieron guardar los permisos');
     }
   }
 

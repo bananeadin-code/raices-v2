@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 export interface Column<T> {
   header: string;
   render: (row: T) => ReactNode;
+  align?: 'left' | 'right' | 'center';
 }
 
 interface Props<T> {
@@ -23,14 +24,14 @@ export function DataTable<T extends { id: number }>({
     <table className="data-table">
       <thead>
         <tr>
-          {columns.map((c) => <th key={c.header}>{c.header}</th>)}
+          {columns.map((c) => <th key={c.header} style={c.align ? { textAlign: c.align } : undefined}>{c.header}</th>)}
           {conAcciones && <th>Acciones</th>}
         </tr>
       </thead>
       <tbody>
         {rows.map((row) => (
           <tr key={row.id}>
-            {columns.map((c) => <td key={c.header}>{c.render(row)}</td>)}
+            {columns.map((c) => <td key={c.header} style={c.align ? { textAlign: c.align } : undefined}>{c.render(row)}</td>)}
             {conAcciones && (
               <td>
                 {onEdit && <button className="btn-ghost btn-sm" onClick={() => onEdit(row)}>Editar</button>}

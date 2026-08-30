@@ -11,7 +11,7 @@ async function seed() {
   const modulos = [
     'pos', 'remisiones', 'cobranza', 'abonos', 'produccion', 'inventario',
     'clientes', 'articulos', 'materias', 'categorias', 'vehiculos', 'sucursales',
-    'usuarios', 'roles', 'reportes', 'tareas', 'supervision',
+    'usuarios', 'roles', 'reportes', 'tareas', 'supervision', 'bitacora',
   ];
   for (const m of modulos) {
     await pool.query(

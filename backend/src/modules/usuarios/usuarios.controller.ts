@@ -5,7 +5,12 @@ import { ApiError } from '../../utils/http';
 import { readPageParams } from '../../utils/pagination';
 
 export async function listar(req: Request, res: Response) {
-  res.json(await service.listar(readPageParams(req.query)));
+  const soloInactivos = req.query.inactivos === '1' || req.query.inactivos === 'true';
+  res.json(await service.listar(readPageParams(req.query), soloInactivos));
+}
+export async function reactivar(req: Request, res: Response) {
+  await service.reactivar(Number(req.params.id));
+  res.status(204).send();
 }
 export async function obtener(req: Request, res: Response) {
   res.json(await service.obtener(Number(req.params.id)));

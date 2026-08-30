@@ -7,6 +7,7 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 interface ProduccionRow {
   id: number; folio: number; fecha: string; cantidad: number; estado: string;
@@ -22,6 +23,7 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
 
 export function Produccion() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<ProduccionRow>('/produccion');
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
@@ -42,13 +44,13 @@ export function Produccion() {
         articulo_id: Number(form.articulo_id), sucursal_id: Number(form.sucursal_id),
         cantidad: Number(form.cantidad), observaciones: form.observaciones || null,
       });
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Producción creada');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al registrar'); }
   }
   async function cambiar(id: number, estado: string) {
     if (estado === 'cancelado' && !confirm('¿Cancelar esta producción? Se liberará la materia reservada.')) return;
-    try { await api.put(`/produccion/${id}/estado`, { estado }); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo cambiar el estado'); }
+    try { await api.put(`/produccion/${id}/estado`, { estado }); await reload(); toast.exito('Estado actualizado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo cambiar el estado'); }
   }
   const puedeEditar = puede('produccion:editar');
 
@@ -56,7 +58,7 @@ export function Produccion() {
     { header: 'Folio', render: (p) => p.folio },
     { header: 'Fecha', render: (p) => new Date(p.fecha).toLocaleDateString() },
     { header: 'Artículo', render: (p) => p.articulo },
-    { header: 'Cantidad', render: (p) => Number(p.cantidad).toLocaleString() },
+    { header: 'Cantidad', align: 'right', render: (p) => Number(p.cantidad).toLocaleString() },
     { header: 'Sucursal', render: (p) => p.sucursal },
     {
       header: 'Estado',

@@ -7,6 +7,7 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Articulo> = { nombre: '', precio: 0, costo: 0, es_producible: false };
 
@@ -14,6 +15,7 @@ interface RecetaRow { materia_id: number | ''; cantidad: number | ''; }
 
 export function Articulos() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Articulo>('/articulos');
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
@@ -38,13 +40,13 @@ export function Articulos() {
     try {
       if (form.id) await api.put(`/articulos/${form.id}`, form);
       else await api.post('/articulos', form);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
   }
   async function eliminar(a: Articulo) {
     if (!confirm(`¿Eliminar "${a.nombre}"?`)) return;
-    try { await api.del(`/articulos/${a.id}`); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo eliminar'); }
+    try { await api.del(`/articulos/${a.id}`); await reload(); toast.exito('Eliminado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo eliminar'); }
   }
 
   // ---- Receta ----
@@ -67,15 +69,15 @@ export function Articulos() {
       .map((r) => ({ materia_id: Number(r.materia_id), cantidad: Number(r.cantidad) }));
     try {
       await api.put(`/articulos/${recetaArt.id}/receta`, payload);
-      setModalReceta(false);
+      setModalReceta(false); toast.exito('Receta guardada');
     } catch (e) { setErrorReceta(e instanceof Error ? e.message : 'No se pudo guardar la receta'); }
   }
 
   const columns: Column<Articulo>[] = [
     { header: 'Nombre', render: (a) => a.nombre },
     { header: 'Categoría', render: (a) => a.categoria ?? '' },
-    { header: 'Precio', render: (a) => `$${Number(a.precio).toFixed(2)}` },
-    { header: 'Costo', render: (a) => `$${Number(a.costo).toFixed(2)}` },
+    { header: 'Precio', align: 'right', render: (a) => `$${Number(a.precio).toFixed(2)}` },
+    { header: 'Costo', align: 'right', render: (a) => `$${Number(a.costo).toFixed(2)}` },
     { header: 'Se produce', render: (a) => (a.es_producible ? 'Sí' : 'No') },
     { header: 'Receta', render: (a) => (a.es_producible && puede('articulos:ver')
         ? <button className="btn-sm" onClick={() => abrirReceta(a)}>Receta</button> : null) },

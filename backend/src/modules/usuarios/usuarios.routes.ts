@@ -11,5 +11,6 @@ router.get('/:id', requirePermiso('usuarios:ver'), asyncHandler(controller.obten
 router.post('/', requirePermiso('usuarios:crear'), asyncHandler(controller.crear));
 router.put('/:id', requirePermiso('usuarios:editar'), asyncHandler(controller.actualizar));
 router.delete('/:id', requirePermiso('usuarios:eliminar'), asyncHandler(controller.eliminar));
+router.put('/:id/reactivar', requirePermiso('usuarios:editar'), asyncHandler(controller.reactivar));
 
 export default router;

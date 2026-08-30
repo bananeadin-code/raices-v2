@@ -7,12 +7,14 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Sucursal> = { nombre: '', tipo: 'mixto' };
 const TIPOS: Sucursal['tipo'][] = ['tienda', 'almacen', 'fabrica', 'mixto'];
 
 export function Sucursales() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Sucursal>('/sucursales');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Partial<Sucursal>>(VACIO);
@@ -25,13 +27,13 @@ export function Sucursales() {
     try {
       if (form.id) await api.put(`/sucursales/${form.id}`, form);
       else await api.post('/sucursales', form);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
   }
   async function eliminar(s: Sucursal) {
     if (!confirm(`¿Eliminar "${s.nombre}"?`)) return;
-    try { await api.del(`/sucursales/${s.id}`); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo eliminar'); }
+    try { await api.del(`/sucursales/${s.id}`); await reload(); toast.exito('Eliminado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo eliminar'); }
   }
 
   const columns: Column<Sucursal>[] = [

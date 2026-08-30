@@ -7,11 +7,13 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Materia> = { nombre: '', unidad: 'pza', costo: 0 };
 
 export function Materias() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Materia>('/materias');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Partial<Materia>>(VACIO);
@@ -24,20 +26,20 @@ export function Materias() {
     try {
       if (form.id) await api.put(`/materias/${form.id}`, form);
       else await api.post('/materias', form);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
   }
   async function eliminar(m: Materia) {
     if (!confirm(`¿Eliminar "${m.nombre}"?`)) return;
-    try { await api.del(`/materias/${m.id}`); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo eliminar'); }
+    try { await api.del(`/materias/${m.id}`); await reload(); toast.exito('Eliminado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo eliminar'); }
   }
 
   const columns: Column<Materia>[] = [
     { header: 'Código', render: (m) => m.codigo ?? '' },
     { header: 'Nombre', render: (m) => m.nombre },
     { header: 'Unidad', render: (m) => m.unidad },
-    { header: 'Costo', render: (m) => `$${Number(m.costo).toFixed(2)}` },
+    { header: 'Costo', align: 'right', render: (m) => `$${Number(m.costo).toFixed(2)}` },
   ];
 
   return (

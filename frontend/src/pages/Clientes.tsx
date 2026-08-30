@@ -7,6 +7,7 @@ import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Cliente> = { nombre: '', telefono: '', ciudad: '', limite_credito: 0 };
 
@@ -31,6 +32,7 @@ const USOS_CFDI: [string, string][] = [
 
 export function Clientes() {
   const { puede } = useAuth();
+  const toast = useToast();
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Cliente>('/clientes');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Partial<Cliente>>(VACIO);
@@ -44,13 +46,13 @@ export function Clientes() {
     try {
       if (form.id) await api.put(`/clientes/${form.id}`, form);
       else await api.post('/clientes', form);
-      setModal(false); await reload();
+      setModal(false); await reload(); toast.exito('Guardado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
   }
   async function eliminar(c: Cliente) {
     if (!confirm(`¿Eliminar a ${c.nombre}?`)) return;
-    try { await api.del(`/clientes/${c.id}`); await reload(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'No se pudo eliminar'); }
+    try { await api.del(`/clientes/${c.id}`); await reload(); toast.exito('Eliminado'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo eliminar'); }
   }
 
   const set = (campo: keyof Cliente, val: any) => setForm({ ...form, [campo]: val });
@@ -60,7 +62,7 @@ export function Clientes() {
     { header: 'Teléfono', render: (c) => c.telefono ?? '' },
     { header: 'RFC', render: (c) => c.rfc ?? '' },
     { header: 'Ciudad', render: (c) => c.ciudad ?? '' },
-    { header: 'Límite crédito', render: (c) => `$${Number(c.limite_credito).toFixed(2)}` },
+    { header: 'Límite crédito', align: 'right', render: (c) => `$${Number(c.limite_credito).toFixed(2)}` },
   ];
 
   return (

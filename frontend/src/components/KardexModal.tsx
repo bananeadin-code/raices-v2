@@ -30,7 +30,7 @@ export function KardexModal({ itemTipo, itemId, itemNombre, sucursalId, onClose 
     { header: 'Fecha', render: (m) => new Date(m.fecha).toLocaleString() },
     { header: 'Sucursal', render: (m) => m.sucursal },
     { header: 'Tipo', render: (m) => TIPOS[m.tipo] ?? m.tipo },
-    { header: 'Cantidad', render: (m) => Number(m.cantidad).toLocaleString() },
+    { header: 'Cantidad', align: 'right', render: (m) => Number(m.cantidad).toLocaleString() },
     { header: 'Motivo', render: (m) => m.motivo ?? '' },
     { header: 'Usuario', render: (m) => m.usuario ?? '' },
   ];
