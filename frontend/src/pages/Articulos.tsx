@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { Articulo, Categoria, Materia } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
+import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
@@ -103,11 +104,11 @@ export function Articulos() {
           <input value={form.nombre ?? ''} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
         </label>
         <label>Categoría
-          <select value={form.categoria_id ?? ''}
-            onChange={(e) => setForm({ ...form, categoria_id: e.target.value === '' ? null : Number(e.target.value) })}>
-            <option value="">— Sin categoría —</option>
-            {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
+          <Combobox
+            opciones={categorias.map((c) => ({ value: c.id, label: c.nombre }))}
+            value={form.categoria_id ?? ''}
+            onChange={(v) => setForm({ ...form, categoria_id: v === '' ? null : Number(v) })}
+            vacioLabel="— Sin categoría —" placeholder="Selecciona categoría" />
         </label>
         <label>Precio
           <input type="number" value={form.precio ?? 0} onChange={(e) => setForm({ ...form, precio: Number(e.target.value) })} />
@@ -128,12 +129,13 @@ export function Articulos() {
         <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-500)' }}>Materias que consume por cada unidad producida.</p>
         {recetaRows.map((r, i) => (
           <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select style={{ flex: 1 }}
-              value={r.materia_id}
-              onChange={(e) => editarFila(i, 'materia_id', e.target.value === '' ? '' : Number(e.target.value))}>
-              <option value="">— Materia —</option>
-              {materias.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-            </select>
+            <div style={{ flex: 1 }}>
+              <Combobox
+                opciones={materias.map((m) => ({ value: m.id, label: m.nombre }))}
+                value={r.materia_id}
+                onChange={(v) => editarFila(i, 'materia_id', v === '' ? '' : Number(v))}
+                placeholder="Materia" />
+            </div>
             <input type="number" placeholder="Cant." style={{ width: 90 }}
               value={r.cantidad}
               onChange={(e) => editarFila(i, 'cantidad', e.target.value === '' ? '' : Number(e.target.value))} />

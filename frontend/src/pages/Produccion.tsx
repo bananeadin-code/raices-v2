@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { Articulo, Sucursal } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
+import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
@@ -107,16 +108,16 @@ export function Produccion() {
           El descuento real ocurre al marcarla como <strong>terminada</strong>.
         </p>
         <label>Artículo a producir
-          <select value={form.articulo_id} onChange={(e) => setForm({ ...form, articulo_id: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {articulos.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-          </select>
+          <Combobox
+            opciones={articulos.map((a) => ({ value: a.id, label: a.nombre }))}
+            value={form.articulo_id} onChange={(v) => setForm({ ...form, articulo_id: v })}
+            placeholder="Selecciona artículo" />
         </label>
         <label>Sucursal (dónde se produce)
-          <select value={form.sucursal_id} onChange={(e) => setForm({ ...form, sucursal_id: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <Combobox
+            opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+            value={form.sucursal_id} onChange={(v) => setForm({ ...form, sucursal_id: v })}
+            placeholder="Selecciona sucursal" />
         </label>
         <label>Cantidad a producir
           <input type="number" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />

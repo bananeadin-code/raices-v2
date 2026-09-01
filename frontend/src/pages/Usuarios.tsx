@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { UsuarioRow, Rol, Sucursal } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
+import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
@@ -118,18 +119,18 @@ export function Usuarios() {
           <input type="password" autoComplete="new-password" value={form.password ?? ''} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         </label>
         <label>Rol
-          <select value={form.rol_id ?? ''}
-            onChange={(e) => setForm({ ...form, rol_id: e.target.value === '' ? undefined : Number(e.target.value) })}>
-            <option value="">— Selecciona —</option>
-            {roles.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-          </select>
+          <Combobox
+            opciones={roles.map((r) => ({ value: r.id, label: r.nombre }))}
+            value={form.rol_id ?? ''}
+            onChange={(v) => setForm({ ...form, rol_id: v === '' ? undefined : Number(v) })}
+            placeholder="Selecciona rol" />
         </label>
         <label>Sucursal
-          <select value={form.sucursal_id ?? ''}
-            onChange={(e) => setForm({ ...form, sucursal_id: e.target.value === '' ? null : Number(e.target.value) })}>
-            <option value="">— Sin asignar —</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <Combobox
+            opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+            value={form.sucursal_id ?? ''}
+            onChange={(v) => setForm({ ...form, sucursal_id: v === '' ? null : Number(v) })}
+            vacioLabel="— Sin asignar —" placeholder="Selecciona sucursal" />
         </label>
         {error && <p className="error">{error}</p>}
       </Modal>

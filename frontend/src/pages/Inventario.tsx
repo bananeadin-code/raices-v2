@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { Sucursal } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
+import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
@@ -111,10 +112,12 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
         <SearchBar onBuscar={buscar} placeholder={`Buscar ${etiqueta.toLowerCase()}...`} />
         <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           Sucursal:
-          <select value={filtroSuc} onChange={(e) => setFiltroSuc(e.target.value)}>
-            <option value="">Todas</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <div style={{ width: 200 }}>
+            <Combobox
+              opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+              value={filtroSuc} onChange={(v) => setFiltroSuc(v)}
+              vacioLabel="Todas" placeholder="Todas" />
+          </div>
         </label>
       </div>
 
@@ -135,16 +138,12 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
           </select>
         </label>
         <label>{etiqueta}
-          <select value={mov.item_id} onChange={(e) => setMov({ ...mov, item_id: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {items.map((i) => <option key={i.id} value={i.id}>{i.nombre}</option>)}
-          </select>
+          <Combobox opciones={items.map((i) => ({ value: i.id, label: i.nombre }))}
+            value={mov.item_id} onChange={(v) => setMov({ ...mov, item_id: v })} placeholder={`Selecciona ${etiqueta.toLowerCase()}`} />
         </label>
         <label>Sucursal
-          <select value={mov.sucursal_id} onChange={(e) => setMov({ ...mov, sucursal_id: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <Combobox opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+            value={mov.sucursal_id} onChange={(v) => setMov({ ...mov, sucursal_id: v })} placeholder="Selecciona sucursal" />
         </label>
         <label>{mov.tipo === 'ajuste' ? 'Nuevo total' : 'Cantidad'}
           <input type="number" value={mov.cantidad} onChange={(e) => setMov({ ...mov, cantidad: e.target.value })} />
@@ -157,22 +156,16 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
 
       <Modal abierto={modalTras} titulo="Traspaso entre sucursales" onCerrar={() => setModalTras(false)} onGuardar={guardarTras}>
         <label>{etiqueta}
-          <select value={tras.item_id} onChange={(e) => setTras({ ...tras, item_id: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {items.map((i) => <option key={i.id} value={i.id}>{i.nombre}</option>)}
-          </select>
+          <Combobox opciones={items.map((i) => ({ value: i.id, label: i.nombre }))}
+            value={tras.item_id} onChange={(v) => setTras({ ...tras, item_id: v })} placeholder={`Selecciona ${etiqueta.toLowerCase()}`} />
         </label>
         <label>Desde (origen)
-          <select value={tras.sucursal_origen} onChange={(e) => setTras({ ...tras, sucursal_origen: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <Combobox opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+            value={tras.sucursal_origen} onChange={(v) => setTras({ ...tras, sucursal_origen: v })} placeholder="Selecciona origen" />
         </label>
         <label>Hacia (destino)
-          <select value={tras.sucursal_destino} onChange={(e) => setTras({ ...tras, sucursal_destino: e.target.value })}>
-            <option value="">— Selecciona —</option>
-            {sucursales.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
+          <Combobox opciones={sucursales.map((s) => ({ value: s.id, label: s.nombre }))}
+            value={tras.sucursal_destino} onChange={(v) => setTras({ ...tras, sucursal_destino: v })} placeholder="Selecciona destino" />
         </label>
         <label>Cantidad
           <input type="number" value={tras.cantidad} onChange={(e) => setTras({ ...tras, cantidad: e.target.value })} />

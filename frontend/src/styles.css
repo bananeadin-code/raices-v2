@@ -159,6 +159,22 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .login h1 { font-size: 18px; text-align: center; }
 .error { color: var(--danger); font-size: 13px; margin: 0; }
 
+/* Combobox (select con buscador) */
+.combobox { position: relative; width: 100%; }
+.combobox-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 11px; color: var(--ink-900); font-weight: 400; text-align: left; }
+.combobox-trigger:hover { background: var(--surface); border-color: var(--ink-400); }
+.combobox-trigger svg { color: var(--ink-400); flex-shrink: 0; }
+.combobox-placeholder { color: var(--ink-400); }
+.combobox-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-lg); z-index: 50; overflow: hidden; }
+.combobox-search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--ink-400); }
+.combobox-search input { border: none; padding: 4px 0; width: 100%; }
+.combobox-search input:focus { outline: none; box-shadow: none; }
+.combobox-list { max-height: 220px; overflow-y: auto; padding: 4px; }
+.combobox-opt { padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; font-size: 14px; color: var(--ink-700); }
+.combobox-opt:hover { background: var(--canvas-2); }
+.combobox-opt.activa { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+.combobox-vacio { padding: 12px; text-align: center; color: var(--ink-400); font-size: 13px; }
+
 /* Toasts */
 .toast-wrap { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
 .toast { padding: 11px 16px; border-radius: var(--r-sm); box-shadow: var(--sh-lg); font-size: 13px; font-weight: 500; color: #fff; min-width: 200px; max-width: 360px; animation: toast-in .2s ease; }
