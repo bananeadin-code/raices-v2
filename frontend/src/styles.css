@@ -165,7 +165,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .combobox-trigger:hover { background: var(--surface); border-color: var(--ink-400); }
 .combobox-trigger svg { color: var(--ink-400); flex-shrink: 0; }
 .combobox-placeholder { color: var(--ink-400); }
-.combobox-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-lg); z-index: 50; overflow: hidden; }
+/* El panel se posiciona por JS (portal en body con position:fixed), para no ser recortado por modales */
+.combobox-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-lg); z-index: 400; overflow: hidden; }
 .combobox-search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--ink-400); }
 .combobox-search input { border: none; padding: 4px 0; width: 100%; }
 .combobox-search input:focus { outline: none; box-shadow: none; }
