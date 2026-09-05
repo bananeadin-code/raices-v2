@@ -17,8 +17,8 @@ interface Linea { articulo_id: number | ''; cantidad: number | ''; precio_unitar
 const LINEA_VACIA: Linea = { articulo_id: '', cantidad: 1, precio_unitario: '' };
 
 const ESTADOS: Record<string, { label: string; cls: string }> = {
-  pendiente: { label: 'Apartada', cls: 'badge-warn' },
-  confirmada: { label: 'Confirmada', cls: 'badge-ok' },
+  pendiente: { label: 'Pendiente', cls: 'badge-warn' },
+  entregada: { label: 'Entregada', cls: 'badge-ok' },
   cancelada: { label: 'Cancelada', cls: 'badge-danger' },
 };
 
@@ -55,7 +55,7 @@ export function POS() {
 
   function nuevo() {
     setError('');
-    setCab({ sucursal_id: sucursales[0]?.id ?? '', cliente_id: '', metodo_pago: 'efectivo', estado: 'confirmada', descuento: 0, fecha_vencimiento: '', observaciones: '' });
+    setCab({ sucursal_id: sucursales[0]?.id ?? '', cliente_id: '', metodo_pago: 'efectivo', estado: 'entregada', descuento: 0, fecha_vencimiento: '', observaciones: '' });
     setLineas([{ ...LINEA_VACIA }]);
     setModal(true);
   }
@@ -94,7 +94,7 @@ export function POS() {
       });
       setModal(false);
       await reload();
-      toast.exito(cab.estado === 'pendiente' ? 'Venta apartada (stock reservado)' : 'Venta registrada');
+      toast.exito(cab.estado === 'pendiente' ? 'Venta pendiente (no afecta stock)' : 'Venta registrada y entregada');
       verNota(r.id); // abre la nota lista para imprimir
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al registrar la venta'); }
   }
@@ -103,10 +103,10 @@ export function POS() {
     try { setNota(await api.get<VentaDetalle>(`/ventas/${id}`)); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo abrir la nota'); }
   }
-  async function confirmar(v: VentaRow) {
-    if (!confirm(`¿Confirmar la venta #${v.folio}? Se descontará el stock apartado.`)) return;
-    try { await api.put(`/ventas/${v.id}/confirmar`, {}); await reload(); toast.exito('Venta confirmada'); }
-    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo confirmar'); }
+  async function entregar(v: VentaRow) {
+    if (!confirm(`¿Entregar la venta #${v.folio}? Se validará y descontará el stock.`)) return;
+    try { await api.put(`/ventas/${v.id}/entregar`, {}); await reload(); toast.exito('Venta entregada'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo entregar'); }
   }
   async function cancelar(v: VentaRow) {
     if (!confirm(`¿Cancelar la venta #${v.folio}? Se revertirá el stock.`)) return;
@@ -139,9 +139,9 @@ export function POS() {
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           <button className="btn-sm" onClick={() => verNota(v.id)}>Nota</button>
           {v.estado === 'pendiente' && puede('pos:editar') && (
-            <button className="btn-sm btn-primary" onClick={() => confirmar(v)}>Confirmar</button>
+            <button className="btn-sm btn-primary" onClick={() => entregar(v)}>Entregar</button>
           )}
-          {v.metodo_pago === 'credito' && v.estado === 'confirmada' && v.saldo > 0.009 && puede('abonos:crear') && (
+          {v.metodo_pago === 'credito' && v.estado !== 'cancelada' && v.saldo > 0.009 && puede('abonos:crear') && (
             <button className="btn-sm" onClick={() => abrirAbono(v)}>Abonar</button>
           )}
           {v.estado !== 'cancelada' && puede('pos:editar') && (
@@ -165,7 +165,7 @@ export function POS() {
           Estado:
           <div style={{ width: 180 }}>
             <Combobox
-              opciones={[{ value: 'pendiente', label: 'Apartadas' }, { value: 'confirmada', label: 'Confirmadas' }, { value: 'cancelada', label: 'Canceladas' }]}
+              opciones={[{ value: 'pendiente', label: 'Pendientes' }, { value: 'entregada', label: 'Entregadas' }, { value: 'cancelada', label: 'Canceladas' }]}
               value={filtro} onChange={setFiltro} vacioLabel="Todas" placeholder="Todas" />
           </div>
         </label>
@@ -229,8 +229,8 @@ export function POS() {
           </label>
           <label style={{ flex: 1 }}>Tipo
             <select value={cab.estado} onChange={(e) => setCab({ ...cab, estado: e.target.value })}>
-              <option value="confirmada">Venta directa (descuenta stock)</option>
-              <option value="pendiente">Apartar (reserva stock)</option>
+              <option value="entregada">Venta directa (valida y descuenta stock)</option>
+              <option value="pendiente">Pendiente (no afecta stock; se entrega después)</option>
             </select>
           </label>
           <label style={{ width: 120 }}>Descuento

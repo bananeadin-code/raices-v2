@@ -2,7 +2,7 @@ import { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { pool, query, withTransaction } from '../../db/pool';
 import { ApiError } from '../../utils/http';
 import { paged, PageParams } from '../../utils/pagination';
-import { aplicarMovimiento, siguienteFolio, ajustarReservado } from '../inventario/inventario.service';
+import { aplicarMovimiento, siguienteFolio } from '../inventario/inventario.service';
 import { VentaCreate, AbonoCreate } from './ventas.schema';
 
 // ---- helpers de dinero (2 decimales, sin errores de coma flotante) ----
@@ -57,7 +57,7 @@ export async function cobranza(p: PageParams) {
            JOIN sucursales s ON s.id = v.sucursal_id
            LEFT JOIN clientes c ON c.id = v.cliente_id
            LEFT JOIN (SELECT venta_id, SUM(monto) AS pagado FROM abonos GROUP BY venta_id) ab ON ab.venta_id = v.id`,
-    where: "v.metodo_pago = 'credito' AND v.estado = 'confirmada' AND (v.total - IFNULL(ab.pagado, 0)) > 0.009",
+    where: "v.metodo_pago = 'credito' AND v.estado <> 'cancelada' AND (v.total - IFNULL(ab.pagado, 0)) > 0.009",
     search: { col: 'c.nombre', q: p.q },
     order: 'vencida DESC, v.fecha_vencimiento IS NULL, v.fecha_vencimiento ASC, v.id DESC',
     page: p.page, pageSize: p.pageSize,
@@ -90,7 +90,7 @@ export async function obtener(id: number) {
       WHERE ab.venta_id = ? ORDER BY ab.fecha, ab.id`, [id]);
 
   const garantiasHead = await query<any>(
-    'SELECT id, articulo_id, nombre, meses_garantia, descripcion FROM venta_garantias WHERE venta_id = ? ORDER BY id', [id]);
+    'SELECT id, articulo_id, nombre, meses_garantia, descripcion, articulos_txt FROM venta_garantias WHERE venta_id = ? ORDER BY id', [id]);
   const garantias = [];
   for (const g of garantiasHead) {
     const puntos = await query<any>(
@@ -102,22 +102,28 @@ export async function obtener(id: number) {
   return { ...venta, items, abonos, garantias, pagado, saldo: r2(Number(venta.total) - pagado) };
 }
 
-// Toma la garantía vigente de cada artículo vendido y la fotografía en la venta (snapshot).
-async function snapshotGarantias(cx: PoolConnection, ventaId: number, articuloIds: number[]) {
-  const vistas = new Set<number>();
-  for (const artId of articuloIds) {
+// Fotografía la garantía en la venta (snapshot). Agrupa por plantilla: si dos
+// artículos comparten la misma garantía sale un solo bloque; el campo articulos_txt
+// dice a qué artículo(s) de la nota cubre cada bloque (para etiquetarlo al imprimir).
+async function snapshotGarantias(cx: PoolConnection, ventaId: number, nombrePorArticulo: Map<number, string>) {
+  const porPlantilla = new Map<number, { info: any; articulos: string[] }>();
+  for (const [artId, nombre] of nombrePorArticulo) {
     const [arts]: any = await cx.query(
       `SELECT a.garantia_plantilla_id AS pid, g.nombre, g.meses_garantia, g.descripcion, g.activo
          FROM articulos a JOIN garantia_plantillas g ON g.id = a.garantia_plantilla_id
         WHERE a.id = ?`, [artId]);
     const g = arts[0];
-    if (!g || !g.activo || vistas.has(g.pid)) continue; // sin plantilla, inactiva o repetida
-    vistas.add(g.pid);
+    if (!g || !g.activo) continue; // sin plantilla o inactiva
+    const grupo = porPlantilla.get(g.pid) ?? { info: g, articulos: [] };
+    if (!grupo.articulos.includes(nombre)) grupo.articulos.push(nombre);
+    porPlantilla.set(g.pid, grupo);
+  }
+  for (const [pid, { info, articulos }] of porPlantilla) {
     const [res]: any = await cx.query(
-      'INSERT INTO venta_garantias (venta_id, articulo_id, nombre, meses_garantia, descripcion) VALUES (?, ?, ?, ?, ?)',
-      [ventaId, artId, g.nombre, g.meses_garantia, g.descripcion ?? null]);
+      'INSERT INTO venta_garantias (venta_id, articulo_id, nombre, meses_garantia, descripcion, articulos_txt) VALUES (?, ?, ?, ?, ?, ?)',
+      [ventaId, null, info.nombre, info.meses_garantia, info.descripcion ?? null, articulos.join(', ')]);
     const [puntos]: any = await cx.query(
-      'SELECT texto, orden FROM garantia_puntos WHERE plantilla_id = ? ORDER BY orden, id', [g.pid]);
+      'SELECT texto, orden FROM garantia_puntos WHERE plantilla_id = ? ORDER BY orden, id', [pid]);
     for (const p of puntos) {
       await cx.query('INSERT INTO venta_garantia_puntos (venta_garantia_id, texto, orden) VALUES (?, ?, ?)',
         [res.insertId, p.texto, p.orden]);
@@ -161,14 +167,21 @@ export async function crear(data: VentaCreate, usuarioId: number) {
     if (!cli[0]) throw new ApiError(404, 'Cliente no encontrado.');
   }
 
+  const entrega = data.estado === 'entregada'; // venta directa
+  const nombrePorArticulo = new Map<number, string>(data.items.map((it) => [it.articulo_id, porId.get(it.articulo_id).nombre]));
+
   return withTransaction(async (cx) => {
-    // Valida stock disponible de cada artículo en la sucursal (aparta o descuenta).
-    for (const l of lineas) {
-      const disp = await disponible(cx, data.sucursal_id, l.articulo_id);
-      if (disp < l.cantidad) {
-        const a = porId.get(l.articulo_id);
-        throw new ApiError(422,
-          `Stock insuficiente de "${a.nombre}" en la sucursal (disponible ${disp}, se requieren ${l.cantidad}).`);
+    // Solo la venta directa (entregada) valida y descuenta stock.
+    // El apartado (pendiente) NO toca stock: se manda a producción y se entrega después.
+    if (entrega) {
+      for (const l of lineas) {
+        const disp = await disponible(cx, data.sucursal_id, l.articulo_id);
+        if (disp < l.cantidad) {
+          const a = porId.get(l.articulo_id);
+          throw new ApiError(422,
+            `Stock insuficiente de "${a.nombre}" en la sucursal (disponible ${disp}, se requieren ${l.cantidad}). ` +
+            `Puedes registrarla como "Pendiente" y entregarla después.`);
+        }
       }
     }
 
@@ -184,11 +197,8 @@ export async function crear(data: VentaCreate, usuarioId: number) {
       await cx.query(
         'INSERT INTO venta_items (venta_id, articulo_id, cantidad, precio_unitario, importe) VALUES (?, ?, ?, ?, ?)',
         [ventaId, l.articulo_id, l.cantidad, l.precio_unitario, l.importe]);
-      if (data.estado === 'pendiente') {
-        // Aparta: reserva stock, no lo consume aún.
-        await ajustarReservado(cx, data.sucursal_id, 'articulo', l.articulo_id, l.cantidad);
-      } else {
-        // Venta directa: descuenta stock físico y deja rastro en el kardex.
+      if (entrega) {
+        // Descuenta stock físico y deja rastro en el kardex.
         await aplicarMovimiento(cx, {
           sucursal_id: data.sucursal_id, articulo_id: l.articulo_id, cantidad: -l.cantidad,
           tipo: 'venta', referencia_tipo: 'venta', referencia_id: ventaId, usuario_id: usuarioId,
@@ -196,33 +206,42 @@ export async function crear(data: VentaCreate, usuarioId: number) {
       }
     }
 
-    await snapshotGarantias(cx, ventaId, ids);
+    await snapshotGarantias(cx, ventaId, nombrePorArticulo);
     return { id: ventaId, folio, estado: data.estado, total };
   });
 }
 
-// Aparta -> confirma: libera la reserva y descuenta stock físico (movimiento de venta).
-export async function confirmar(id: number, usuarioId: number) {
+// Apartado -> entregada: valida stock y lo descuenta (movimiento de venta).
+// Es el paso que hacen tras producir/surtir el apartado.
+export async function entregar(id: number, usuarioId: number) {
   const rows = await query<any>('SELECT * FROM ventas WHERE id = ?', [id]);
   const venta = rows[0];
   if (!venta) throw new ApiError(404, 'Venta no encontrada.');
-  if (venta.estado !== 'pendiente') throw new ApiError(422, `Solo se confirma una venta pendiente (actual: ${venta.estado}).`);
-  const items = await query<any>('SELECT articulo_id, cantidad FROM venta_items WHERE venta_id = ?', [id]);
+  if (venta.estado !== 'pendiente') throw new ApiError(422, `Solo se entrega una venta pendiente (actual: ${venta.estado}).`);
+  const items = await query<any>(
+    `SELECT vi.articulo_id, vi.cantidad, a.nombre FROM venta_items vi JOIN articulos a ON a.id = vi.articulo_id
+      WHERE vi.venta_id = ?`, [id]);
 
   return withTransaction(async (cx) => {
     for (const it of items) {
-      await ajustarReservado(cx, venta.sucursal_id, 'articulo', it.articulo_id, -Number(it.cantidad));
+      const disp = await disponible(cx, venta.sucursal_id, it.articulo_id);
+      if (disp < Number(it.cantidad)) {
+        throw new ApiError(422,
+          `No se puede entregar: stock insuficiente de "${it.nombre}" (disponible ${disp}, se requieren ${it.cantidad}).`);
+      }
+    }
+    for (const it of items) {
       await aplicarMovimiento(cx, {
         sucursal_id: venta.sucursal_id, articulo_id: it.articulo_id, cantidad: -Number(it.cantidad),
         tipo: 'venta', referencia_tipo: 'venta', referencia_id: id, usuario_id: usuarioId,
       });
     }
-    await cx.query("UPDATE ventas SET estado = 'confirmada' WHERE id = ?", [id]);
-    return { id, estado: 'confirmada' };
+    await cx.query("UPDATE ventas SET estado = 'entregada' WHERE id = ?", [id]);
+    return { id, estado: 'entregada' };
   });
 }
 
-// Cancela: libera reserva (si pendiente) o revierte el stock descontado (si confirmada).
+// Cancela: el apartado no tocó stock (nada que revertir); la entregada reingresa el stock.
 export async function cancelar(id: number, usuarioId: number) {
   const rows = await query<any>('SELECT * FROM ventas WHERE id = ?', [id]);
   const venta = rows[0];
@@ -235,12 +254,8 @@ export async function cancelar(id: number, usuarioId: number) {
   const items = await query<any>('SELECT articulo_id, cantidad FROM venta_items WHERE venta_id = ?', [id]);
 
   return withTransaction(async (cx) => {
-    if (venta.estado === 'pendiente') {
-      for (const it of items) {
-        await ajustarReservado(cx, venta.sucursal_id, 'articulo', it.articulo_id, -Number(it.cantidad));
-      }
-    } else if (venta.estado === 'confirmada') {
-      // Reingresa el stock que se había descontado.
+    if (venta.estado === 'entregada') {
+      // Reingresa el stock que se había descontado al entregar.
       for (const it of items) {
         await aplicarMovimiento(cx, {
           sucursal_id: venta.sucursal_id, articulo_id: it.articulo_id, cantidad: Number(it.cantidad),

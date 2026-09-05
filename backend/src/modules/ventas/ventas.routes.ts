@@ -12,7 +12,7 @@ router.get('/cobranza', requirePermiso('cobranza:ver'), asyncHandler(controller.
 router.get('/', requirePermiso('pos:ver'), asyncHandler(controller.listar));
 router.get('/:id', requirePermiso('pos:ver'), asyncHandler(controller.obtener));
 router.post('/', requirePermiso('pos:crear'), asyncHandler(controller.crear));
-router.put('/:id/confirmar', requirePermiso('pos:editar'), asyncHandler(controller.confirmar));
+router.put('/:id/entregar', requirePermiso('pos:editar'), asyncHandler(controller.entregar));
 router.put('/:id/cancelar', requirePermiso('pos:editar'), asyncHandler(controller.cancelar));
 router.post('/:id/abonos', requirePermiso('abonos:crear'), asyncHandler(controller.abonar));
 

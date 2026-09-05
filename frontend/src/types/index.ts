@@ -78,7 +78,7 @@ export interface VentaRow {
   id: number;
   folio: number;
   fecha: string;
-  estado: 'pendiente' | 'confirmada' | 'cancelada';
+  estado: 'pendiente' | 'entregada' | 'cancelada';
   metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'credito';
   total: number;
   fecha_vencimiento?: string | null;
@@ -123,6 +123,7 @@ export interface VentaGarantia {
   nombre: string;
   meses_garantia: number;
   descripcion?: string | null;
+  articulos_txt?: string | null; // artículo(s) de la nota que cubre esta garantía
   puntos: string[];
 }
 export interface VentaDetalle extends VentaRow {

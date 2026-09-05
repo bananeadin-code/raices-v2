@@ -104,6 +104,7 @@ export function NotaPrint({ venta, onClose }: { venta: VentaDetalle; onClose: ()
                   Garantía de entrega e instalación — {g.nombre}
                   {g.meses_garantia > 0 && <span className="nota-garantia-meses"> ({g.meses_garantia} meses de garantía)</span>}
                 </div>
+                {g.articulos_txt && <div className="nota-garantia-aplica">Aplica a: {g.articulos_txt}</div>}
                 {g.descripcion && <div className="nota-garantia-leyenda">{g.descripcion}</div>}
                 <ul className="nota-garantia-puntos">
                   {g.puntos.map((p, i) => (

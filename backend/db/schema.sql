@@ -219,7 +219,8 @@ CREATE TABLE ventas (
   usuario_id        INT UNSIGNED NOT NULL,
   cliente_id        INT UNSIGNED NULL,              -- NULL = mostrador / publico en general
   fecha             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  estado            ENUM('pendiente','confirmada','cancelada') NOT NULL DEFAULT 'confirmada',
+  estado            ENUM('pendiente','entregada','cancelada') NOT NULL DEFAULT 'pendiente',
+                    -- pendiente = apartado (no toca stock); entregada = descuenta stock; cancelada = revierte
   metodo_pago       ENUM('efectivo','tarjeta','transferencia','credito') NOT NULL DEFAULT 'efectivo',
   fecha_vencimiento DATE NULL,                      -- solo credito
   subtotal          DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -288,6 +289,7 @@ CREATE TABLE venta_garantias (
   nombre         VARCHAR(120) NOT NULL,       -- snapshot del nombre de la plantilla
   meses_garantia INT UNSIGNED NOT NULL DEFAULT 0,
   descripcion    VARCHAR(300) NULL,
+  articulos_txt  VARCHAR(400) NULL,           -- artículo(s) de la nota que cubre esta garantía
   CONSTRAINT fk_vg_venta FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

@@ -224,6 +224,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .nota-garantia-bloque + .nota-garantia-bloque { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #999; }
 .nota-garantia-titulo { font-weight: 700; font-size: 13px; }
 .nota-garantia-meses { font-weight: 600; color: #444; }
+.nota-garantia-aplica { font-size: 12px; color: #222; margin-top: 2px; }
 .nota-garantia-leyenda { font-size: 12px; color: #444; margin: 2px 0 6px; font-style: italic; }
 .nota-garantia-puntos { list-style: none; margin: 0; padding: 0; }
 .nota-garantia-puntos li { font-size: 12.5px; padding: 2px 0; }

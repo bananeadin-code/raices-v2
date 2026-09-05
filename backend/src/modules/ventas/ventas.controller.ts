@@ -17,14 +17,14 @@ export async function obtener(req: Request, res: Response) {
 export async function crear(req: Request, res: Response) {
   const data = ventaCreate.parse(req.body);
   const r = await service.crear(data, req.user!.id);
-  await bitacora.registrar(req.user!.id, `venta.${data.estado === 'pendiente' ? 'apartar' : 'crear'}`, 'venta', r.id,
+  await bitacora.registrar(req.user!.id, `venta.${data.estado === 'pendiente' ? 'pendiente' : 'entregar'}`, 'venta', r.id,
     { folio: r.folio, total: r.total, metodo_pago: data.metodo_pago });
   res.status(201).json(r);
 }
-export async function confirmar(req: Request, res: Response) {
+export async function entregar(req: Request, res: Response) {
   const id = Number(req.params.id);
-  const r = await service.confirmar(id, req.user!.id);
-  await bitacora.registrar(req.user!.id, 'venta.confirmar', 'venta', id);
+  const r = await service.entregar(id, req.user!.id);
+  await bitacora.registrar(req.user!.id, 'venta.entregar', 'venta', id);
   res.json(r);
 }
 export async function cancelar(req: Request, res: Response) {
