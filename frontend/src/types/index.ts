@@ -50,7 +50,104 @@ export interface Articulo {
   minimo?: number | null;
   maximo?: number | null;
   reorden?: number | null;
+  garantia_plantilla_id?: number | null;
+  garantia?: string | null;
   activo: number;
+}
+
+// ---- Garantía / consentimiento de entrega ----
+export interface GarantiaPlantilla {
+  id: number;
+  nombre: string;
+  meses_garantia: number;
+  descripcion?: string | null;
+  activo: number;
+  puntos?: string | { texto: string }[] | number; // en lista = conteo; en detalle = arreglo
+}
+export interface GarantiaDetalle {
+  id: number;
+  nombre: string;
+  meses_garantia: number;
+  descripcion?: string | null;
+  activo: number;
+  puntos: { id: number; texto: string; orden: number }[];
+}
+
+// ---- Ventas / POS ----
+export interface VentaRow {
+  id: number;
+  folio: number;
+  fecha: string;
+  estado: 'pendiente' | 'confirmada' | 'cancelada';
+  metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'credito';
+  total: number;
+  fecha_vencimiento?: string | null;
+  sucursal: string;
+  usuario: string;
+  cliente: string;
+  pagado: number;
+  saldo: number;
+}
+export interface CobranzaRow {
+  id: number;
+  folio: number;
+  fecha: string;
+  fecha_vencimiento?: string | null;
+  total: number;
+  sucursal: string;
+  cliente: string;
+  pagado: number;
+  saldo: number;
+  vencida: number;
+}
+export interface VentaItem {
+  id: number;
+  articulo_id: number;
+  articulo: string;
+  sku?: string | null;
+  cantidad: number;
+  precio_unitario: number;
+  importe: number;
+}
+export interface VentaAbono {
+  id: number;
+  monto: number;
+  metodo: string;
+  fecha: string;
+  referencia?: string | null;
+  usuario: string;
+}
+export interface VentaGarantia {
+  id: number;
+  articulo_id?: number | null;
+  nombre: string;
+  meses_garantia: number;
+  descripcion?: string | null;
+  puntos: string[];
+}
+export interface VentaDetalle extends VentaRow {
+  subtotal: number;
+  descuento: number;
+  observaciones?: string | null;
+  // encabezado del negocio (sucursal)
+  sucursal_nombre: string;
+  calle?: string | null;
+  numero?: string | null;
+  colonia?: string | null;
+  cp?: string | null;
+  ciudad?: string | null;
+  sucursal_telefono?: string | null;
+  // datos del cliente
+  cliente_nombre?: string | null;
+  cliente_telefono?: string | null;
+  cliente_rfc?: string | null;
+  cliente_calle?: string | null;
+  cliente_numero?: string | null;
+  cliente_colonia?: string | null;
+  cliente_ciudad?: string | null;
+  items: VentaItem[];
+  abonos: VentaAbono[];
+  garantias: VentaGarantia[];
 }
 
 export interface Sucursal {

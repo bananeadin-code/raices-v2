@@ -10,6 +10,7 @@ export const articuloCreate = z.object({
   minimo: z.number().int().nullish(),
   maximo: z.number().int().nullish(),
   reorden: z.number().int().nullish(),
+  garantia_plantilla_id: z.number().int().positive().nullish(), // plantilla de garantía/entrega
 });
 export const articuloUpdate = articuloCreate.partial();
 

@@ -9,6 +9,8 @@ import usuariosRoutes from './modules/usuarios/usuarios.routes';
 import rolesRoutes from './modules/roles/roles.routes';
 import inventarioRoutes from './modules/inventario/inventario.routes';
 import produccionRoutes from './modules/produccion/produccion.routes';
+import garantiasRoutes from './modules/garantias/garantias.routes';
+import ventasRoutes from './modules/ventas/ventas.routes';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
@@ -21,6 +23,10 @@ router.use('/categorias', categoriasRoutes);
 router.use('/articulos', articulosRoutes);
 router.use('/materias', materiasRoutes);
 router.use('/sucursales', sucursalesRoutes);
+router.use('/garantias', garantiasRoutes);
+
+// Punto de venta
+router.use('/ventas', ventasRoutes);
 
 // Acceso
 router.use('/usuarios', usuariosRoutes);
@@ -32,7 +38,4 @@ router.use('/produccion', produccionRoutes);
 router.use('/bitacora', bitacoraRoutes);
 
 // Conforme construyas cada módulo, móntalo aquí:
-// router.use('/pos', posRoutes);
-// router.use('/produccion', produccionRoutes);
-// router.use('/cobranza', cobranzaRoutes);
 // router.use('/reportes', reportesRoutes);

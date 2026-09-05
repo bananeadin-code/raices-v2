@@ -9,6 +9,7 @@
     "seed": "tsx src/db/seed.ts",
     "seed:demo": "tsx src/db/seed-demo.ts",
     "migrate:legacy": "tsx src/db/migrate-legacy.ts",
+    "migrate:garantias": "tsx src/db/alter-garantias.ts",
     "test": "vitest run"
   },
   "dependencies": {

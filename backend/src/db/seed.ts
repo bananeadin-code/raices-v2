@@ -10,7 +10,7 @@ async function seed() {
 
   const modulos = [
     'pos', 'remisiones', 'cobranza', 'abonos', 'produccion', 'inventario',
-    'clientes', 'articulos', 'materias', 'categorias', 'vehiculos', 'sucursales',
+    'clientes', 'articulos', 'materias', 'categorias', 'garantias', 'vehiculos', 'sucursales',
     'usuarios', 'roles', 'reportes', 'tareas', 'supervision', 'bitacora',
   ];
   for (const m of modulos) {

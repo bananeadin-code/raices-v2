@@ -15,6 +15,9 @@ import { Usuarios } from './pages/Usuarios';
 import { Roles } from './pages/Roles';
 import { Inventario } from './pages/Inventario';
 import { Produccion } from './pages/Produccion';
+import { Garantias } from './pages/Garantias';
+import { POS } from './pages/POS';
+import { Cobranza } from './pages/Cobranza';
 import { Bitacora } from './pages/Bitacora';
 import { EnConstruccion } from './pages/EnConstruccion';
 
@@ -46,17 +49,18 @@ export default function App() {
                     <Route path="/categorias" element={<Categorias />} />
                     <Route path="/articulos" element={<Articulos />} />
                     <Route path="/materias" element={<Materias />} />
+                    <Route path="/garantias" element={<Garantias />} />
                     <Route path="/sucursales" element={<Sucursales />} />
 
                     {/* Acceso (construidos) */}
                     <Route path="/usuarios" element={<Usuarios />} />
                     <Route path="/roles" element={<Roles />} />
 
-                    {/* Operativo (por construir) */}
-                    <Route path="/pos" element={<EnConstruccion nombre="Punto de Venta" />} />
+                    {/* Operativo */}
+                    <Route path="/pos" element={<POS />} />
                     <Route path="/remisiones" element={<EnConstruccion nombre="Remisiones" />} />
-                    <Route path="/cobranza" element={<EnConstruccion nombre="Cobranza" />} />
-                    <Route path="/abonos" element={<EnConstruccion nombre="Abonos" />} />
+                    <Route path="/cobranza" element={<Cobranza />} />
+                    <Route path="/abonos" element={<Cobranza />} />
                     <Route path="/produccion" element={<Produccion />} />
                     <Route path="/tareas" element={<EnConstruccion nombre="Tareas" />} />
 

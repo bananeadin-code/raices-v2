@@ -34,6 +34,7 @@ const MENU: MenuGrupo[] = [
       { to: '/articulos', label: 'Artículos', permiso: 'articulos:ver', icon: 'tag' },
       { to: '/materias', label: 'Materias Primas', permiso: 'materias:ver', icon: 'layers' },
       { to: '/categorias', label: 'Categorías', permiso: 'categorias:ver', icon: 'folder' },
+      { to: '/garantias', label: 'Garantías', permiso: 'garantias:ver', icon: 'file' },
       { to: '/vehiculos', label: 'Vehículos', permiso: 'vehiculos:ver', icon: 'truck' },
       { to: '/sucursales', label: 'Sucursales', permiso: 'sucursales:ver', icon: 'building' },
       { to: '/usuarios', label: 'Usuarios', permiso: 'usuarios:ver', icon: 'users' },

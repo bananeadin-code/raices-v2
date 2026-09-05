@@ -4,12 +4,12 @@ import { ApiError } from '../../utils/http';
 import { ArticuloCreate, ArticuloUpdate, RecetaItem } from './articulos.schema';
 import { paged, PageParams } from '../../utils/pagination';
 
-const CAMPOS = ['sku', 'nombre', 'categoria_id', 'precio', 'costo', 'es_producible', 'minimo', 'maximo', 'reorden'] as const;
+const CAMPOS = ['sku', 'nombre', 'categoria_id', 'precio', 'costo', 'es_producible', 'minimo', 'maximo', 'reorden', 'garantia_plantilla_id'] as const;
 
 export async function listar(p: PageParams) {
   return paged({
-    select: 'a.*, c.nombre AS categoria',
-    from: 'articulos a LEFT JOIN categorias c ON c.id = a.categoria_id',
+    select: 'a.*, c.nombre AS categoria, g.nombre AS garantia',
+    from: 'articulos a LEFT JOIN categorias c ON c.id = a.categoria_id LEFT JOIN garantia_plantillas g ON g.id = a.garantia_plantilla_id',
     where: 'a.activo = 1', search: { col: 'a.nombre', q: p.q }, order: 'a.nombre',
     page: p.page, pageSize: p.pageSize,
   });

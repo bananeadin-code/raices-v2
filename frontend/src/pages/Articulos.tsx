@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { Articulo, Categoria, Materia } from '../types';
+import { Articulo, Categoria, Materia, GarantiaPlantilla } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
@@ -20,6 +20,7 @@ export function Articulos() {
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Articulo>('/articulos');
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
+  const [garantias, setGarantias] = useState<GarantiaPlantilla[]>([]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Partial<Articulo>>(VACIO);
   const [error, setError] = useState('');
@@ -32,6 +33,7 @@ export function Articulos() {
   useEffect(() => {
     api.getAll<Categoria>('/categorias').then(setCategorias).catch(() => {});
     api.getAll<Materia>('/materias').then(setMaterias).catch(() => {});
+    api.getAll<GarantiaPlantilla>('/garantias').then(setGarantias).catch(() => {});
   }, []);
 
   function nuevo() { setError(''); setForm(VACIO); setModal(true); }
@@ -115,6 +117,13 @@ export function Articulos() {
         </label>
         <label>Costo
           <input type="number" value={form.costo ?? 0} onChange={(e) => setForm({ ...form, costo: Number(e.target.value) })} />
+        </label>
+        <label>Garantía de entrega
+          <Combobox
+            opciones={garantias.map((g) => ({ value: g.id, label: `${g.nombre} (${g.meses_garantia} meses)` }))}
+            value={form.garantia_plantilla_id ?? ''}
+            onChange={(v) => setForm({ ...form, garantia_plantilla_id: v === '' ? null : Number(v) })}
+            vacioLabel="— Sin garantía —" placeholder="Selecciona plantilla de garantía" />
         </label>
         <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <input type="checkbox" checked={!!form.es_producible}

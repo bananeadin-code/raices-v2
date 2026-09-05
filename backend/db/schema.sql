@@ -112,6 +112,7 @@ CREATE TABLE articulos (            -- producto terminado / mercancia
   minimo         INT NULL,
   maximo         INT NULL,
   reorden        INT NULL,
+  garantia_plantilla_id INT UNSIGNED NULL,     -- plantilla de garantia/entrega (FK mas abajo)
   activo         TINYINT(1) NOT NULL DEFAULT 1,
   creado_en      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -250,6 +251,53 @@ CREATE TABLE venta_items (
 --                                  + movimiento tipo 'venta'
 --   venta directa 'confirmada' -> cantidad -= cantidad; + movimiento 'venta'
 --   'cancelada' -> libera reservado / revierte movimientos
+
+-- ----------------------------------------------------------
+-- 4.1) GARANTIA / CONSENTIMIENTO DE ENTREGA
+--   Plantilla por tipo de producto (Cisterna, Tinaco, Panel Solar, Splits...).
+--   Sus "puntos" son la lista de verificacion de entrega que el cliente revisa
+--   y FIRMA en la nota (reduce quejas/reembolsos: queda su consentimiento por escrito).
+--   Al emitir una venta se toma un SNAPSHOT (venta_garantias / venta_garantia_puntos)
+--   para que la nota sea reproducible aunque la plantilla cambie despues.
+--   Las siembra y engancha el script:  npm run migrate:garantias
+-- ----------------------------------------------------------
+CREATE TABLE garantia_plantillas (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre         VARCHAR(120) NOT NULL,
+  meses_garantia INT UNSIGNED NOT NULL DEFAULT 0,
+  descripcion    VARCHAR(300) NULL,
+  activo         TINYINT(1) NOT NULL DEFAULT 1,
+  creado_en      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE garantia_puntos (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  plantilla_id INT UNSIGNED NOT NULL,
+  texto        VARCHAR(300) NOT NULL,
+  orden        INT UNSIGNED NOT NULL DEFAULT 0,
+  CONSTRAINT fk_gpunto_plantilla FOREIGN KEY (plantilla_id) REFERENCES garantia_plantillas(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+ALTER TABLE articulos
+  ADD CONSTRAINT fk_articulo_garantia FOREIGN KEY (garantia_plantilla_id) REFERENCES garantia_plantillas(id);
+
+CREATE TABLE venta_garantias (
+  id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  venta_id       BIGINT UNSIGNED NOT NULL,
+  articulo_id    INT UNSIGNED NULL,
+  nombre         VARCHAR(120) NOT NULL,       -- snapshot del nombre de la plantilla
+  meses_garantia INT UNSIGNED NOT NULL DEFAULT 0,
+  descripcion    VARCHAR(300) NULL,
+  CONSTRAINT fk_vg_venta FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE venta_garantia_puntos (
+  id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  venta_garantia_id BIGINT UNSIGNED NOT NULL,
+  texto             VARCHAR(300) NOT NULL,
+  orden             INT UNSIGNED NOT NULL DEFAULT 0,
+  CONSTRAINT fk_vgp_vg FOREIGN KEY (venta_garantia_id) REFERENCES venta_garantias(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 -- ==========================================================
 -- 5) CREDITO Y ABONOS  (cobranza)
