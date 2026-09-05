@@ -6,8 +6,9 @@ import * as controller from './ventas.controller';
 const router = Router();
 router.use(auth);
 
-// /cobranza va ANTES de /:id para que no lo capture como id.
+// /cobranza y /abonos van ANTES de /:id para que no los capture como id.
 router.get('/cobranza', requirePermiso('cobranza:ver'), asyncHandler(controller.cobranza));
+router.get('/abonos', requirePermiso('abonos:ver'), asyncHandler(controller.historialAbonos));
 
 router.get('/', requirePermiso('pos:ver'), asyncHandler(controller.listar));
 router.get('/:id', requirePermiso('pos:ver'), asyncHandler(controller.obtener));

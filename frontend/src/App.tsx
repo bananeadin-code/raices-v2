@@ -18,6 +18,7 @@ import { Produccion } from './pages/Produccion';
 import { Garantias } from './pages/Garantias';
 import { POS } from './pages/POS';
 import { Cobranza } from './pages/Cobranza';
+import { Abonos } from './pages/Abonos';
 import { Remisiones } from './pages/Remisiones';
 import { Bitacora } from './pages/Bitacora';
 import { EnConstruccion } from './pages/EnConstruccion';
@@ -61,7 +62,7 @@ export default function App() {
                     <Route path="/pos" element={<POS />} />
                     <Route path="/remisiones" element={<Remisiones />} />
                     <Route path="/cobranza" element={<Cobranza />} />
-                    <Route path="/abonos" element={<Cobranza />} />
+                    <Route path="/abonos" element={<Abonos />} />
                     <Route path="/produccion" element={<Produccion />} />
                     <Route path="/tareas" element={<EnConstruccion nombre="Tareas" />} />
 

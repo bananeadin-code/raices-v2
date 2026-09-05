@@ -64,6 +64,28 @@ export async function cobranza(p: PageParams) {
   });
 }
 
+// Historial de abonos (pagos recibidos), con el total cobrado del filtro actual.
+export async function historialAbonos(p: PageParams) {
+  const like = p.q ? 'AND c.nombre LIKE ?' : '';
+  const likeParam = p.q ? [`%${p.q}%`] : [];
+  const base = `FROM abonos ab
+                JOIN ventas v ON v.id = ab.venta_id
+                LEFT JOIN clientes c ON c.id = v.cliente_id
+                JOIN usuarios u ON u.id = ab.usuario_id
+                WHERE 1 = 1 ${like}`;
+  const totales = await query<any>(`SELECT COUNT(*) AS n, IFNULL(SUM(ab.monto), 0) AS suma ${base}`, likeParam);
+  const total = Number(totales[0].n);
+  const suma = Number(totales[0].suma);
+  const offset = (p.page - 1) * p.pageSize;
+  const data = await query<any>(
+    `SELECT ab.id, ab.fecha, ab.monto, ab.metodo, ab.referencia,
+            v.folio AS venta_folio, v.id AS venta_id,
+            COALESCE(c.nombre, 'Público en general') AS cliente, u.nombre AS usuario
+     ${base} ORDER BY ab.fecha DESC, ab.id DESC LIMIT ? OFFSET ?`,
+    [...likeParam, p.pageSize, offset]);
+  return { data, total, page: p.page, pageSize: p.pageSize, suma };
+}
+
 // Aggregate completo para la nota / detalle.
 export async function obtener(id: number) {
   const rows = await query<any>(

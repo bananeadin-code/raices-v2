@@ -100,6 +100,18 @@ export interface CobranzaRow {
   saldo: number;
   vencida: number;
 }
+export interface AbonoHistorial {
+  id: number;
+  fecha: string;
+  monto: number;
+  metodo: string;
+  referencia?: string | null;
+  venta_folio: number;
+  venta_id: number;
+  cliente: string;
+  usuario: string;
+}
+
 export interface VentaItem {
   id: number;
   articulo_id: number;

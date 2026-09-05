@@ -140,6 +140,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .badge-danger { background: var(--danger-50); color: var(--danger); }
 .badge-info { background: #eef2ff; color: #4338ca; }
 
+/* Tarjetas de resumen (stats) */
+.stat-tiles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.stat-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 12px 18px; min-width: 180px; box-shadow: var(--sh-sm); }
+.stat-label { display: block; font-size: 12px; color: var(--ink-500); font-weight: 600; }
+.stat-value { display: block; font-size: 22px; font-weight: 700; color: var(--brand-700); margin-top: 2px; }
+
 /* Chips de detalle en la bitácora */
 .bita-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .bita-chip { background: var(--canvas-2); border: 1px solid var(--line); border-radius: var(--r-sm);

@@ -11,6 +11,9 @@ export async function listar(req: Request, res: Response) {
 export async function cobranza(req: Request, res: Response) {
   res.json(await service.cobranza(readPageParams(req.query)));
 }
+export async function historialAbonos(req: Request, res: Response) {
+  res.json(await service.historialAbonos(readPageParams(req.query)));
+}
 export async function obtener(req: Request, res: Response) {
   res.json(await service.obtener(Number(req.params.id)));
 }
