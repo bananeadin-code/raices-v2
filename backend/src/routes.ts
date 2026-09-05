@@ -11,6 +11,7 @@ import inventarioRoutes from './modules/inventario/inventario.routes';
 import produccionRoutes from './modules/produccion/produccion.routes';
 import garantiasRoutes from './modules/garantias/garantias.routes';
 import ventasRoutes from './modules/ventas/ventas.routes';
+import remisionesRoutes from './modules/remisiones/remisiones.routes';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
@@ -27,6 +28,7 @@ router.use('/garantias', garantiasRoutes);
 
 // Punto de venta
 router.use('/ventas', ventasRoutes);
+router.use('/remisiones', remisionesRoutes);
 
 // Acceso
 router.use('/usuarios', usuariosRoutes);

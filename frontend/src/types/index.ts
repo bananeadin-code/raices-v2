@@ -126,6 +126,44 @@ export interface VentaGarantia {
   articulos_txt?: string | null; // artículo(s) de la nota que cubre esta garantía
   puntos: string[];
 }
+// ---- Remisiones (nota de entrega) ----
+export interface RemisionRow {
+  id: number;
+  folio: number;
+  fecha: string;
+  estado: 'pendiente' | 'entregada' | 'cancelada';
+  observaciones?: string | null;
+  venta_id?: number | null;
+  venta_folio?: number | null;
+  sucursal: string;
+  usuario: string;
+  cliente: string;
+  renglones: number;
+}
+export interface RemisionItem {
+  id: number;
+  articulo_id: number;
+  articulo: string;
+  sku?: string | null;
+  cantidad: number;
+}
+export interface RemisionDetalle extends RemisionRow {
+  sucursal_nombre: string;
+  calle?: string | null;
+  numero?: string | null;
+  colonia?: string | null;
+  cp?: string | null;
+  ciudad?: string | null;
+  sucursal_telefono?: string | null;
+  cliente_nombre?: string | null;
+  cliente_telefono?: string | null;
+  cliente_calle?: string | null;
+  cliente_numero?: string | null;
+  cliente_colonia?: string | null;
+  cliente_ciudad?: string | null;
+  items: RemisionItem[];
+}
+
 export interface VentaDetalle extends VentaRow {
   subtotal: number;
   descuento: number;
