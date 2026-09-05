@@ -7,6 +7,7 @@ export const pool = mysql.createPool({
   user: env.db.user,
   password: env.db.password,
   database: env.db.database,
+  charset: 'utf8mb4', // acentos y ñ correctos (evita textos como "Liquidaci�n")
   waitForConnections: true,
   connectionLimit: 10,
   namedPlaceholders: true,
