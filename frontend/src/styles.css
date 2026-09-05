@@ -138,6 +138,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .badge-muted { background: var(--canvas-2); color: var(--ink-500); }
 .badge-warn { background: var(--accent-100); color: var(--accent-700); }
 .badge-danger { background: var(--danger-50); color: var(--danger); }
+.badge-info { background: #eef2ff; color: #4338ca; }
+
+/* Chips de detalle en la bitácora */
+.bita-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bita-chip { background: var(--canvas-2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1px 8px; font-size: 12px; color: var(--ink-700); }
+.bita-chip-k { color: var(--ink-400); font-weight: 600; margin-right: 2px; }
 
 /* ---------- Modal ---------- */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
