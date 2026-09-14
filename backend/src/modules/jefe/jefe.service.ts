@@ -98,14 +98,67 @@ export async function reporteGeneral() {
   const produccionPorEstado = await query<any>(
     'SELECT estado, COUNT(*) n FROM producciones GROUP BY estado');
 
+  const ultimasVentas = await query<any>(
+    `SELECT v.folio, COALESCE(c.nombre,'Público en general') cliente, v.total importe, v.fecha, s.nombre sucursal
+       FROM ventas v LEFT JOIN clientes c ON c.id=v.cliente_id JOIN sucursales s ON s.id=v.sucursal_id
+      WHERE v.estado<>'cancelada' ORDER BY v.id DESC LIMIT 10`);
+
+  const tareasPendientes = await query<any>(
+    `SELECT t.tema, ua.nombre responsable, t.fecha_limite
+       FROM tareas t JOIN usuarios ua ON ua.id=t.asignada_a
+      WHERE t.estado='pendiente' ORDER BY t.fecha_limite IS NULL, t.fecha_limite ASC, t.id DESC LIMIT 20`);
+
+  // ---- Por sucursal: qué producen y qué tienen pendiente ----
+  const sucursales = await query<any>('SELECT id, nombre, abreviatura FROM sucursales WHERE activo=1 ORDER BY nombre');
+  const prodPend = await query<any>(
+    `SELECT s.id sucursal_id, p.folio, a.nombre articulo, p.cantidad, p.estado
+       FROM producciones p JOIN sucursales s ON s.id=p.sucursal_id JOIN articulos a ON a.id=p.articulo_id
+      WHERE p.estado IN ('en_espera','en_progreso') ORDER BY p.id DESC`);
+  const prodMes = await query<any>(
+    `SELECT s.id sucursal_id, a.nombre articulo, SUM(p.cantidad) cantidad
+       FROM producciones p JOIN sucursales s ON s.id=p.sucursal_id JOIN articulos a ON a.id=p.articulo_id
+      WHERE p.estado='terminado' AND YEAR(p.fecha)=YEAR(CURDATE()) AND MONTH(p.fecha)=MONTH(CURDATE())
+      GROUP BY s.id, a.id ORDER BY cantidad DESC`);
+  const produccionPorSucursal = sucursales.map((s: any) => ({
+    sucursal: s.nombre,
+    pendientes: prodPend.filter((p) => p.sucursal_id === s.id)
+      .map((p) => ({ folio: p.folio, articulo: p.articulo, cantidad: num(p.cantidad), estado: p.estado })),
+    producidoMes: prodMes.filter((p) => p.sucursal_id === s.id)
+      .map((p) => ({ articulo: p.articulo, cantidad: num(p.cantidad) })),
+  }));
+
+  // ---- Matriz de existencias por sucursal (artículo × sucursal) ----
+  const matriz = async (tabla: 'articulos' | 'materias') => {
+    const col = tabla === 'articulos' ? 'articulo_id' : 'materia_id';
+    const rows = await query<any>(
+      `SELECT x.nombre item, e.sucursal_id, (e.cantidad - e.reservado) disponible
+         FROM existencias e JOIN ${tabla} x ON x.id = e.${col}
+        WHERE e.${col} IS NOT NULL AND x.activo = 1`);
+    type Fila = { item: string; celdas: Record<number, number>; total: number };
+    const porItem = new Map<string, Fila>();
+    for (const r of rows) {
+      const f: Fila = porItem.get(r.item) ?? { item: r.item, celdas: {}, total: 0 };
+      f.celdas[r.sucursal_id] = num(r.disponible);
+      f.total += num(r.disponible);
+      porItem.set(r.item, f);
+    }
+    const filas = [...porItem.values()].filter((f) => f.total !== 0).sort((a, b) => a.item.localeCompare(b.item));
+    return { sucursales: sucursales.map((s: any) => ({ id: s.id, nombre: s.nombre, abreviatura: s.abreviatura })), filas };
+  };
+
   return {
     resumen: await resumen(),
     ventasPorDia: ventasPorDia.map((r) => ({ dia: r.dia, monto: num(r.monto), n: num(r.n) })),
     topArticulos: topArticulos.map((r) => ({ nombre: r.nombre, unidades: num(r.unidades), monto: num(r.monto) })),
     ventasPorSucursal: ventasPorSucursal.map((r) => ({ nombre: r.nombre, monto: num(r.monto), n: num(r.n) })),
     ventasPorMetodo: ventasPorMetodo.map((r) => ({ metodo: r.metodo, monto: num(r.monto), n: num(r.n) })),
+    ultimasVentas: ultimasVentas.map((r) => ({ folio: r.folio, cliente: r.cliente, importe: num(r.importe), fecha: r.fecha, sucursal: r.sucursal })),
     cobranza,
     bajoMinimo: bajoMinimo.map((r) => ({ ...r, minimo: num(r.minimo), disponible: num(r.disponible) })),
     produccionPorEstado: produccionPorEstado.map((r) => ({ estado: r.estado, n: num(r.n) })),
+    produccionPorSucursal,
+    tareasPendientes: tareasPendientes.map((r) => ({ tema: r.tema, responsable: r.responsable, fecha_limite: r.fecha_limite })),
+    inventario: await matriz('articulos'),
+    materias: await matriz('materias'),
   };
 }

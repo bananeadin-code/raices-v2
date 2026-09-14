@@ -36,6 +36,19 @@ interface Reporte {
   cobranza: { total: number; vencido: number; porVencer: number };
   bajoMinimo: { articulo: string; sucursal: string; minimo: number; disponible: number }[];
   produccionPorEstado: { estado: string; n: number }[];
+  ultimasVentas: { folio: number; cliente: string; importe: number; fecha: string; sucursal: string }[];
+  tareasPendientes: { tema: string; responsable: string; fecha_limite?: string | null }[];
+  produccionPorSucursal: {
+    sucursal: string;
+    pendientes: { folio: number; articulo: string; cantidad: number; estado: string }[];
+    producidoMes: { articulo: string; cantidad: number }[];
+  }[];
+  inventario: Matriz;
+  materias: Matriz;
+}
+interface Matriz {
+  sucursales: { id: number; nombre: string; abreviatura?: string | null }[];
+  filas: { item: string; celdas: Record<number, number>; total: number }[];
 }
 
 const METODO_LABEL: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito' };
@@ -112,86 +125,124 @@ function JefeDashboard({ usuario, onUsuario, onSalir }: { usuario: string; onUsu
 
       {rep && (
         <div className="jefe-body">
-          {/* KPIs */}
+          {/* Resumen rápido (KPIs) */}
           <div className="jefe-kpis">
             <Kpi label="Ventas del mes" value={money(rep.resumen.ventasMes.monto)} sub={`${rep.resumen.ventasMes.n} ventas`} destacado />
             <Kpi label="Ventas de hoy" value={money(rep.resumen.ventasHoy.monto)} sub={`${rep.resumen.ventasHoy.n} ventas`} />
-            <Kpi label="Por cobrar (cartera)" value={money(rep.resumen.carteraPorCobrar)} sub="crédito con saldo" />
-            <Kpi label="Valor de inventario" value={money(rep.resumen.valorInventario)} sub="a costo" />
-            <Kpi label="Ventas pendientes" value={String(rep.resumen.ventasPendientes)} sub="apartadas" />
+            <Kpi label="Por cobrar" value={money(rep.resumen.carteraPorCobrar)} sub="crédito con saldo" />
+            <Kpi label="Valor inventario" value={money(rep.resumen.valorInventario)} sub="a costo" />
+            <Kpi label="Pendientes" value={String(rep.resumen.ventasPendientes)} sub="ventas apartadas" />
             <Kpi label="Producción activa" value={String(rep.resumen.produccionActiva)} sub="en proceso" />
-            <Kpi label="Clientes activos" value={String(rep.resumen.clientesActivos)} />
+            <Kpi label="Clientes" value={String(rep.resumen.clientesActivos)} sub="activos" />
             <Kpi label="Bajo mínimo" value={String(rep.resumen.articulosBajoMinimo)} sub="artículos" alerta={rep.resumen.articulosBajoMinimo > 0} />
           </div>
 
-          <div className="jefe-grid">
-            {/* Ventas últimos 30 días */}
-            <Card titulo="Ventas · últimos 30 días" ancho2>
-              {rep.ventasPorDia.length === 0 ? <Vacio /> : (
-                <div className="jefe-bars">
-                  {rep.ventasPorDia.map((d) => (
-                    <div key={d.dia} className="jefe-bar-col" title={`${new Date(d.dia).toLocaleDateString('es-MX')} · ${money2(d.monto)} · ${d.n} venta(s)`}>
-                      <div className="jefe-bar" style={{ height: `${Math.max(2, (d.monto / maxDia) * 100)}%` }} />
+          {/* Producción por sucursal: qué producen y qué tienen pendiente */}
+          <Seccion titulo="Producción por sucursal" abierta>
+            <div className="jefe-sucs">
+              {rep.produccionPorSucursal.map((s, i) => (
+                <div key={i} className="jefe-suc">
+                  <div className="jefe-suc-nombre">{s.sucursal}</div>
+                  <div className="jefe-suc-cols">
+                    <div>
+                      <div className="jefe-mini-title">Pendiente</div>
+                      {s.pendientes.length === 0 ? <span className="jefe-dim">Sin pendientes</span> : s.pendientes.map((p, j) => (
+                        <div key={j} className="jefe-line">
+                          <span>#{p.folio} · {p.articulo} ×{p.cantidad}</span>
+                          <span className={`jefe-tag ${p.estado === 'en_progreso' ? 'warn' : ''}`}>{ESTADO_PROD[p.estado] ?? p.estado}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    <div>
+                      <div className="jefe-mini-title">Producido este mes</div>
+                      {s.producidoMes.length === 0 ? <span className="jefe-dim">Nada este mes</span> : s.producidoMes.map((p, j) => (
+                        <div key={j} className="jefe-line"><span>{p.articulo}</span><span className="jefe-line-num">{p.cantidad.toLocaleString('es-MX')}</span></div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="jefe-bars-cap"><span>hace 30 días</span><span>hoy</span></div>
-            </Card>
+              ))}
+            </div>
+          </Seccion>
 
-            {/* Cobranza */}
-            <Card titulo="Cobranza">
-              <div className="jefe-cobranza">
-                <div><span className="l">Total por cobrar</span><span className="v">{money2(rep.cobranza.total)}</span></div>
-                <div><span className="l">Vencido</span><span className="v" style={{ color: '#dc2626' }}>{money2(rep.cobranza.vencido)}</span></div>
-                <div><span className="l">Por vencer</span><span className="v">{money2(rep.cobranza.porVencer)}</span></div>
-              </div>
-            </Card>
+          {/* Inventario por sucursal */}
+          <Seccion titulo="Inventario por sucursal" sub={`${rep.inventario.filas.length} artículos con existencia`}>
+            <MatrizTabla m={rep.inventario} etiqueta="Artículo" />
+          </Seccion>
 
-            {/* Ventas por método */}
-            <Card titulo="Ventas por método de pago">
-              <BarList items={rep.ventasPorMetodo.map((m) => ({ label: METODO_LABEL[m.metodo] ?? m.metodo, value: m.monto }))} fmt={money2} />
-            </Card>
+          {/* Materias por sucursal */}
+          <Seccion titulo="Materias por sucursal" sub={`${rep.materias.filas.length} materiales con existencia`}>
+            <MatrizTabla m={rep.materias} etiqueta="Materia" />
+          </Seccion>
 
-            {/* Ventas por sucursal */}
-            <Card titulo="Ventas por sucursal">
-              <BarList items={rep.ventasPorSucursal.map((s) => ({ label: s.nombre, value: s.monto }))} fmt={money2} />
-            </Card>
-
-            {/* Top artículos */}
-            <Card titulo="Artículos más vendidos">
-              {rep.topArticulos.length === 0 ? <Vacio /> : (
-                <table className="jefe-tabla">
-                  <thead><tr><th>Artículo</th><th>Unid.</th><th>Importe</th></tr></thead>
-                  <tbody>
-                    {rep.topArticulos.map((a, i) => (
-                      <tr key={i}><td>{a.nombre}</td><td>{a.unidades.toLocaleString('es-MX')}</td><td>{money2(a.monto)}</td></tr>
+          {/* Ventas */}
+          <Seccion titulo="Ventas">
+            <div className="jefe-grid">
+              <Card titulo="Últimos 30 días" ancho2>
+                {rep.ventasPorDia.length === 0 ? <Vacio /> : (
+                  <div className="jefe-bars">
+                    {rep.ventasPorDia.map((d) => (
+                      <div key={d.dia} className="jefe-bar-col" title={`${new Date(d.dia).toLocaleDateString('es-MX')} · ${money2(d.monto)} · ${d.n} venta(s)`}>
+                        <div className="jefe-bar" style={{ height: `${Math.max(2, (d.monto / maxDia) * 100)}%` }} />
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              )}
-            </Card>
+                  </div>
+                )}
+                <div className="jefe-bars-cap"><span>hace 30 días</span><span>hoy</span></div>
+              </Card>
+              <Card titulo="Por método de pago"><BarList items={rep.ventasPorMetodo.map((m) => ({ label: METODO_LABEL[m.metodo] ?? m.metodo, value: m.monto }))} fmt={money2} /></Card>
+              <Card titulo="Por sucursal"><BarList items={rep.ventasPorSucursal.map((s) => ({ label: s.nombre, value: s.monto }))} fmt={money2} /></Card>
+              <Card titulo="Artículos más vendidos">
+                {rep.topArticulos.length === 0 ? <Vacio /> : (
+                  <table className="jefe-tabla">
+                    <thead><tr><th>Artículo</th><th>Unid.</th><th>Importe</th></tr></thead>
+                    <tbody>{rep.topArticulos.map((a, i) => (<tr key={i}><td>{a.nombre}</td><td>{a.unidades.toLocaleString('es-MX')}</td><td>{money2(a.monto)}</td></tr>))}</tbody>
+                  </table>
+                )}
+              </Card>
+              <Card titulo="Últimas ventas" ancho2>
+                {rep.ultimasVentas.length === 0 ? <Vacio /> : (
+                  <table className="jefe-tabla">
+                    <thead><tr><th>Folio</th><th>Cliente</th><th>Sucursal</th><th>Importe</th></tr></thead>
+                    <tbody>{rep.ultimasVentas.map((v, i) => (<tr key={i}><td>#{v.folio}</td><td>{v.cliente}</td><td>{v.sucursal}</td><td>{money2(v.importe)}</td></tr>))}</tbody>
+                  </table>
+                )}
+              </Card>
+            </div>
+          </Seccion>
 
-            {/* Producción por estado */}
-            <Card titulo="Producción por estado">
-              <BarList items={rep.produccionPorEstado.map((p) => ({ label: ESTADO_PROD[p.estado] ?? p.estado, value: p.n }))} fmt={(n) => String(n)} />
-            </Card>
+          {/* Créditos / cobranza */}
+          <Seccion titulo="Créditos y cobranza" sub={money(rep.cobranza.total)}>
+            <div className="jefe-cobranza">
+              <div><span className="l">Total por cobrar</span><span className="v">{money2(rep.cobranza.total)}</span></div>
+              <div><span className="l">Vencido</span><span className="v" style={{ color: '#f87171' }}>{money2(rep.cobranza.vencido)}</span></div>
+              <div><span className="l">Por vencer</span><span className="v">{money2(rep.cobranza.porVencer)}</span></div>
+            </div>
+          </Seccion>
 
-            {/* Bajo mínimo */}
-            <Card titulo="Inventario bajo mínimo" ancho2>
-              {rep.bajoMinimo.length === 0 ? <p className="jefe-ok">Todo el inventario está por encima de su mínimo.</p> : (
-                <table className="jefe-tabla">
-                  <thead><tr><th>Artículo</th><th>Sucursal</th><th>Mínimo</th><th>Disponible</th></tr></thead>
-                  <tbody>
-                    {rep.bajoMinimo.map((b, i) => (
-                      <tr key={i}><td>{b.articulo}</td><td>{b.sucursal}</td><td>{b.minimo}</td>
-                        <td style={{ color: '#dc2626', fontWeight: 700 }}>{b.disponible}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </Card>
-          </div>
+          {/* Tareas pendientes */}
+          <Seccion titulo="Tareas pendientes" sub={String(rep.tareasPendientes.length)}>
+            {rep.tareasPendientes.length === 0 ? <p className="jefe-ok">Sin tareas pendientes.</p> : (
+              <table className="jefe-tabla">
+                <thead><tr><th>Tema</th><th>Responsable</th><th>Límite</th></tr></thead>
+                <tbody>{rep.tareasPendientes.map((t, i) => (
+                  <tr key={i}><td>{t.tema}</td><td>{t.responsable}</td><td>{t.fecha_limite ? new Date(t.fecha_limite).toLocaleDateString('es-MX') : '—'}</td></tr>
+                ))}</tbody>
+              </table>
+            )}
+          </Seccion>
+
+          {/* Inventario bajo mínimo */}
+          <Seccion titulo="Inventario bajo mínimo" sub={String(rep.bajoMinimo.length)}>
+            {rep.bajoMinimo.length === 0 ? <p className="jefe-ok">Todo el inventario está por encima de su mínimo.</p> : (
+              <table className="jefe-tabla">
+                <thead><tr><th>Artículo</th><th>Sucursal</th><th>Mínimo</th><th>Disponible</th></tr></thead>
+                <tbody>{rep.bajoMinimo.map((b, i) => (
+                  <tr key={i}><td>{b.articulo}</td><td>{b.sucursal}</td><td>{b.minimo}</td><td style={{ color: '#f87171', fontWeight: 700 }}>{b.disponible}</td></tr>
+                ))}</tbody>
+              </table>
+            )}
+          </Seccion>
         </div>
       )}
 
@@ -206,6 +257,47 @@ function Kpi({ label, value, sub, destacado, alerta }: { label: string; value: s
       <span className="jefe-kpi-label">{label}</span>
       <span className="jefe-kpi-value">{value}</span>
       {sub && <span className="jefe-kpi-sub">{sub}</span>}
+    </div>
+  );
+}
+
+// Acordeón orientado a teléfono: secciones colapsables.
+function Seccion({ titulo, sub, children, abierta }: { titulo: string; sub?: string; children: ReactNode; abierta?: boolean }) {
+  const [open, setOpen] = useState(!!abierta);
+  return (
+    <div className="jefe-sec">
+      <button className="jefe-sec-head" onClick={() => setOpen((v) => !v)}>
+        <span className="jefe-sec-titulo">{titulo}{sub ? <span className="jefe-sec-sub">{sub}</span> : null}</span>
+        <svg className={`jefe-caret${open ? ' abierto' : ''}`} width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      {open && <div className="jefe-sec-body">{children}</div>}
+    </div>
+  );
+}
+
+function MatrizTabla({ m, etiqueta }: { m: Matriz; etiqueta: string }) {
+  if (m.filas.length === 0) return <Vacio />;
+  return (
+    <div className="jefe-scroll">
+      <table className="jefe-tabla jefe-matriz">
+        <thead>
+          <tr>
+            <th>{etiqueta}</th>
+            {m.sucursales.map((s) => <th key={s.id} title={s.nombre} style={{ textAlign: 'right' }}>{s.abreviatura || s.nombre}</th>)}
+            <th style={{ textAlign: 'right' }}>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {m.filas.map((f, i) => (
+            <tr key={i}>
+              <td>{f.item}</td>
+              {m.sucursales.map((s) => <td key={s.id} style={{ textAlign: 'right' }}>{(f.celdas[s.id] ?? 0).toLocaleString('es-MX')}</td>)}
+              <td style={{ textAlign: 'right', fontWeight: 700 }}>{f.total.toLocaleString('es-MX')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
