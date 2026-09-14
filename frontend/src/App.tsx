@@ -20,8 +20,11 @@ import { POS } from './pages/POS';
 import { Cobranza } from './pages/Cobranza';
 import { Abonos } from './pages/Abonos';
 import { Remisiones } from './pages/Remisiones';
+import { Vehiculos } from './pages/Vehiculos';
+import { Tareas } from './pages/Tareas';
+import { Supervision } from './pages/Supervision';
+import { PanelJefe } from './pages/PanelJefe';
 import { Bitacora } from './pages/Bitacora';
-import { EnConstruccion } from './pages/EnConstruccion';
 
 function Privado({ children }: { children: ReactElement }) {
   const { usuario, cargando } = useAuth();
@@ -37,6 +40,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          {/* Panel del jefe: acceso secreto y autónomo, fuera del sistema operativo y de los roles */}
+          <Route path="/panel" element={<PanelJefe />} />
           <Route
             path="/*"
             element={
@@ -52,6 +57,7 @@ export default function App() {
                     <Route path="/articulos" element={<Articulos />} />
                     <Route path="/materias" element={<Materias />} />
                     <Route path="/garantias" element={<Garantias />} />
+                    <Route path="/vehiculos" element={<Vehiculos />} />
                     <Route path="/sucursales" element={<Sucursales />} />
 
                     {/* Acceso (construidos) */}
@@ -64,16 +70,15 @@ export default function App() {
                     <Route path="/cobranza" element={<Cobranza />} />
                     <Route path="/abonos" element={<Abonos />} />
                     <Route path="/produccion" element={<Produccion />} />
-                    <Route path="/tareas" element={<EnConstruccion nombre="Tareas" />} />
+                    <Route path="/tareas" element={<Tareas />} />
 
                     {/* Inventario */}
                     <Route path="/inventario/articulos" element={<Inventario tipo="articulo" />} />
                     <Route path="/inventario/materiales" element={<Inventario tipo="materia" />} />
 
-                    {/* Administración (por construir) */}
-                    <Route path="/reportes" element={<EnConstruccion nombre="Reportes" />} />
+                    {/* Administración */}
                     <Route path="/bitacora" element={<Bitacora />} />
-                    <Route path="/supervision" element={<EnConstruccion nombre="Supervisión" />} />
+                    <Route path="/supervision" element={<Supervision />} />
                   </Routes>
                   </ErrorBoundary>
                 </Layout>

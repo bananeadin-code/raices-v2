@@ -12,6 +12,10 @@ import produccionRoutes from './modules/produccion/produccion.routes';
 import garantiasRoutes from './modules/garantias/garantias.routes';
 import ventasRoutes from './modules/ventas/ventas.routes';
 import remisionesRoutes from './modules/remisiones/remisiones.routes';
+import vehiculosRoutes from './modules/vehiculos/vehiculos.routes';
+import tareasRoutes from './modules/tareas/tareas.routes';
+import supervisionesRoutes from './modules/supervisiones/supervisiones.routes';
+import jefeRoutes from './modules/jefe/jefe.routes';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
@@ -25,10 +29,18 @@ router.use('/articulos', articulosRoutes);
 router.use('/materias', materiasRoutes);
 router.use('/sucursales', sucursalesRoutes);
 router.use('/garantias', garantiasRoutes);
+router.use('/vehiculos', vehiculosRoutes);
 
 // Punto de venta
 router.use('/ventas', ventasRoutes);
 router.use('/remisiones', remisionesRoutes);
+
+// Operativo: tareas y supervisión
+router.use('/tareas', tareasRoutes);
+router.use('/supervisiones', supervisionesRoutes);
+
+// Panel del jefe (reportes) — acceso propio, fuera de usuarios/roles
+router.use('/jefe', jefeRoutes);
 
 // Acceso
 router.use('/usuarios', usuariosRoutes);
