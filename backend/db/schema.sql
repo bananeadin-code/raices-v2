@@ -140,6 +140,20 @@ CREATE TABLE vehiculos (
   activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
+-- Bitácora por vehículo: reparaciones, gastos u observaciones.
+CREATE TABLE vehiculo_notas (
+  id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  vehiculo_id INT UNSIGNED NOT NULL,
+  tipo        ENUM('reparacion','gasto','observacion') NOT NULL DEFAULT 'observacion',
+  descripcion VARCHAR(500) NOT NULL,
+  monto       DECIMAL(12,2) NULL,
+  fecha       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  usuario_id  INT UNSIGNED NULL,
+  CONSTRAINT fk_vnota_vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id) ON DELETE CASCADE,
+  CONSTRAINT fk_vnota_usuario  FOREIGN KEY (usuario_id)  REFERENCES usuarios(id),
+  INDEX idx_vnota_vehiculo (vehiculo_id, fecha)
+) ENGINE=InnoDB;
+
 -- Receta / BOM: materiales que consume un articulo producible
 -- (reemplaza 'articulos2materias' del sistema viejo)
 CREATE TABLE articulo_receta (
@@ -266,6 +280,7 @@ CREATE TABLE garantia_plantillas (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre         VARCHAR(120) NOT NULL,
   meses_garantia INT UNSIGNED NOT NULL DEFAULT 0,
+  permanente     TINYINT(1) NOT NULL DEFAULT 0,   -- garantia permanente (salvo causas naturales, mal uso)
   descripcion    VARCHAR(300) NULL,
   activo         TINYINT(1) NOT NULL DEFAULT 1,
   creado_en      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -288,6 +303,7 @@ CREATE TABLE venta_garantias (
   articulo_id    INT UNSIGNED NULL,
   nombre         VARCHAR(120) NOT NULL,       -- snapshot del nombre de la plantilla
   meses_garantia INT UNSIGNED NOT NULL DEFAULT 0,
+  permanente     TINYINT(1) NOT NULL DEFAULT 0,
   descripcion    VARCHAR(300) NULL,
   articulos_txt  VARCHAR(400) NULL,           -- artículo(s) de la nota que cubre esta garantía
   CONSTRAINT fk_vg_venta FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE

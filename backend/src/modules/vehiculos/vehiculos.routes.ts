@@ -11,4 +11,8 @@ router.post('/', requirePermiso('vehiculos:crear'), asyncHandler(controller.crea
 router.put('/:id', requirePermiso('vehiculos:editar'), asyncHandler(controller.actualizar));
 router.delete('/:id', requirePermiso('vehiculos:eliminar'), asyncHandler(controller.eliminar));
 
+// Bitácora del vehículo
+router.get('/:id/notas', requirePermiso('vehiculos:ver'), asyncHandler(controller.listarNotas));
+router.post('/:id/notas', requirePermiso('vehiculos:editar'), asyncHandler(controller.agregarNota));
+
 export default router;

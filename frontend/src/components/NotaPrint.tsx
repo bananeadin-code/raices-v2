@@ -102,7 +102,9 @@ export function NotaPrint({ venta, onClose }: { venta: VentaDetalle; onClose: ()
               <div key={g.id} className="nota-garantia-bloque">
                 <div className="nota-garantia-titulo">
                   Garantía de entrega e instalación — {g.nombre}
-                  {g.meses_garantia > 0 && <span className="nota-garantia-meses"> ({g.meses_garantia} meses de garantía)</span>}
+                  {g.permanente
+                    ? <span className="nota-garantia-meses"> (garantía permanente, salvo causas naturales, mal uso o negligencia)</span>
+                    : g.meses_garantia > 0 && <span className="nota-garantia-meses"> ({g.meses_garantia} meses de garantía)</span>}
                 </div>
                 {g.articulos_txt && <div className="nota-garantia-aplica">Aplica a: {g.articulos_txt}</div>}
                 {g.descripcion && <div className="nota-garantia-leyenda">{g.descripcion}</div>}

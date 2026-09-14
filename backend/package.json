@@ -12,6 +12,7 @@
     "migrate:garantias": "tsx src/db/alter-garantias.ts",
     "migrate:ventas": "tsx src/db/alter-ventas-fase3.ts",
     "migrate:jefe": "tsx src/db/alter-jefe.ts",
+    "migrate:extras": "tsx src/db/alter-extras.ts",
     "test": "vitest run"
   },
   "dependencies": {

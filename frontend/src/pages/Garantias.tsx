@@ -13,10 +13,11 @@ interface Form {
   id?: number;
   nombre: string;
   meses_garantia: number | '';
+  permanente: boolean;
   descripcion: string;
   puntos: string[];
 }
-const VACIO: Form = { nombre: '', meses_garantia: 12, descripcion: '', puntos: [''] };
+const VACIO: Form = { nombre: '', meses_garantia: 12, permanente: false, descripcion: '', puntos: [''] };
 
 export function Garantias() {
   const { puede } = useAuth();
@@ -32,6 +33,7 @@ export function Garantias() {
     const det = await api.get<GarantiaDetalle>(`/garantias/${g.id}`);
     setForm({
       id: det.id, nombre: det.nombre, meses_garantia: det.meses_garantia,
+      permanente: !!det.permanente,
       descripcion: det.descripcion ?? '',
       puntos: det.puntos.length ? det.puntos.map((p) => p.texto) : [''],
     });
@@ -41,7 +43,8 @@ export function Garantias() {
     setError('');
     const payload = {
       nombre: form.nombre,
-      meses_garantia: Number(form.meses_garantia) || 0,
+      meses_garantia: form.permanente ? 0 : (Number(form.meses_garantia) || 0),
+      permanente: form.permanente,
       descripcion: form.descripcion || null,
       puntos: form.puntos.map((p) => p.trim()).filter(Boolean),
     };
@@ -64,7 +67,7 @@ export function Garantias() {
 
   const columns: Column<GarantiaPlantilla>[] = [
     { header: 'Plantilla', render: (g) => g.nombre },
-    { header: 'Garantía', render: (g) => `${g.meses_garantia} meses` },
+    { header: 'Garantía', render: (g) => (g.permanente ? <span className="badge badge-ok">Permanente</span> : `${g.meses_garantia} meses`) },
     { header: 'Puntos de entrega', align: 'right', render: (g) => String(g.puntos ?? 0) },
     { header: 'Leyenda', render: (g) => <span style={{ color: 'var(--ink-500)' }}>{g.descripcion ?? ''}</span> },
   ];
@@ -95,10 +98,15 @@ export function Garantias() {
               placeholder="Cisterna, Tinaco, Panel Solar..." />
           </label>
           <label style={{ flex: 1 }}>Garantía (meses)
-            <input type="number" value={form.meses_garantia}
+            <input type="number" value={form.permanente ? '' : form.meses_garantia} disabled={form.permanente}
               onChange={(e) => setForm({ ...form, meses_garantia: e.target.value === '' ? '' : Number(e.target.value) })} />
           </label>
         </div>
+        <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={form.permanente}
+            onChange={(e) => setForm({ ...form, permanente: e.target.checked })} style={{ width: 'auto' }} />
+          Garantía permanente (salvo causas naturales, mal uso o negligencia)
+        </label>
         <label>Leyenda de la garantía (opcional)
           <input value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
             placeholder="Instalación correcta y entrega verificada." />

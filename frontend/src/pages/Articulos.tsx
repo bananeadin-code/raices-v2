@@ -120,7 +120,7 @@ export function Articulos() {
         </label>
         <label>Garantía de entrega
           <Combobox
-            opciones={garantias.map((g) => ({ value: g.id, label: `${g.nombre} (${g.meses_garantia} meses)` }))}
+            opciones={garantias.map((g) => ({ value: g.id, label: `${g.nombre} (${g.permanente ? 'permanente' : g.meses_garantia + ' meses'})` }))}
             value={form.garantia_plantilla_id ?? ''}
             onChange={(v) => setForm({ ...form, garantia_plantilla_id: v === '' ? null : Number(v) })}
             vacioLabel="— Sin garantía —" placeholder="Selecciona plantilla de garantía" />

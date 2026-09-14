@@ -60,6 +60,7 @@ export interface GarantiaPlantilla {
   id: number;
   nombre: string;
   meses_garantia: number;
+  permanente?: number | boolean;
   descripcion?: string | null;
   activo: number;
   puntos?: string | { texto: string }[] | number; // en lista = conteo; en detalle = arreglo
@@ -68,9 +69,19 @@ export interface GarantiaDetalle {
   id: number;
   nombre: string;
   meses_garantia: number;
+  permanente?: number | boolean;
   descripcion?: string | null;
   activo: number;
   puntos: { id: number; texto: string; orden: number }[];
+}
+
+export interface VehiculoNota {
+  id: number;
+  tipo: 'reparacion' | 'gasto' | 'observacion';
+  descripcion: string;
+  monto?: number | null;
+  fecha: string;
+  usuario?: string | null;
 }
 
 // ---- Ventas / POS ----
@@ -134,6 +145,7 @@ export interface VentaGarantia {
   articulo_id?: number | null;
   nombre: string;
   meses_garantia: number;
+  permanente?: number | boolean;
   descripcion?: string | null;
   articulos_txt?: string | null; // artículo(s) de la nota que cubre esta garantía
   puntos: string[];

@@ -112,7 +112,7 @@ export async function obtener(id: number) {
       WHERE ab.venta_id = ? ORDER BY ab.fecha, ab.id`, [id]);
 
   const garantiasHead = await query<any>(
-    'SELECT id, articulo_id, nombre, meses_garantia, descripcion, articulos_txt FROM venta_garantias WHERE venta_id = ? ORDER BY id', [id]);
+    'SELECT id, articulo_id, nombre, meses_garantia, permanente, descripcion, articulos_txt FROM venta_garantias WHERE venta_id = ? ORDER BY id', [id]);
   const garantias = [];
   for (const g of garantiasHead) {
     const puntos = await query<any>(
@@ -131,7 +131,7 @@ async function snapshotGarantias(cx: PoolConnection, ventaId: number, nombrePorA
   const porPlantilla = new Map<number, { info: any; articulos: string[] }>();
   for (const [artId, nombre] of nombrePorArticulo) {
     const [arts]: any = await cx.query(
-      `SELECT a.garantia_plantilla_id AS pid, g.nombre, g.meses_garantia, g.descripcion, g.activo
+      `SELECT a.garantia_plantilla_id AS pid, g.nombre, g.meses_garantia, g.permanente, g.descripcion, g.activo
          FROM articulos a JOIN garantia_plantillas g ON g.id = a.garantia_plantilla_id
         WHERE a.id = ?`, [artId]);
     const g = arts[0];
@@ -142,8 +142,8 @@ async function snapshotGarantias(cx: PoolConnection, ventaId: number, nombrePorA
   }
   for (const [pid, { info, articulos }] of porPlantilla) {
     const [res]: any = await cx.query(
-      'INSERT INTO venta_garantias (venta_id, articulo_id, nombre, meses_garantia, descripcion, articulos_txt) VALUES (?, ?, ?, ?, ?, ?)',
-      [ventaId, null, info.nombre, info.meses_garantia, info.descripcion ?? null, articulos.join(', ')]);
+      'INSERT INTO venta_garantias (venta_id, articulo_id, nombre, meses_garantia, permanente, descripcion, articulos_txt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [ventaId, null, info.nombre, info.meses_garantia, info.permanente ? 1 : 0, info.descripcion ?? null, articulos.join(', ')]);
     const [puntos]: any = await cx.query(
       'SELECT texto, orden FROM garantia_puntos WHERE plantilla_id = ? ORDER BY orden, id', [pid]);
     for (const p of puntos) {

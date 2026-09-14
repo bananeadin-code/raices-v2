@@ -5,7 +5,7 @@ import { GarantiaUpsert } from './garantias.schema';
 
 export async function listar(p: PageParams) {
   return paged({
-    select: `g.id, g.nombre, g.meses_garantia, g.descripcion, g.activo,
+    select: `g.id, g.nombre, g.meses_garantia, g.permanente, g.descripcion, g.activo,
              (SELECT COUNT(*) FROM garantia_puntos gp WHERE gp.plantilla_id = g.id) AS puntos`,
     from: 'garantia_plantillas g',
     where: 'g.activo = 1',
@@ -25,24 +25,24 @@ export async function obtener(id: number) {
 export async function crear(data: GarantiaUpsert) {
   return withTransaction(async (cx) => {
     const [res]: any = await cx.query(
-      'INSERT INTO garantia_plantillas (nombre, meses_garantia, descripcion, activo) VALUES (?, ?, ?, ?)',
-      [data.nombre, data.meses_garantia, data.descripcion ?? null, data.activo ? 1 : 0]);
+      'INSERT INTO garantia_plantillas (nombre, meses_garantia, permanente, descripcion, activo) VALUES (?, ?, ?, ?, ?)',
+      [data.nombre, data.meses_garantia, data.permanente ? 1 : 0, data.descripcion ?? null, data.activo ? 1 : 0]);
     const id = res.insertId;
     await reemplazarPuntos(cx, id, data.puntos);
-    return obtener(id);
-  });
+    return id;
+  }).then((id) => obtener(id)); // obtener FUERA de la transacción (ya commiteada)
 }
 
 export async function actualizar(id: number, data: GarantiaUpsert) {
   const rows = await query<any>('SELECT id FROM garantia_plantillas WHERE id = ?', [id]);
   if (!rows[0]) throw new ApiError(404, 'Plantilla de garantía no encontrada.');
-  return withTransaction(async (cx) => {
+  await withTransaction(async (cx) => {
     await cx.query(
-      'UPDATE garantia_plantillas SET nombre = ?, meses_garantia = ?, descripcion = ?, activo = ? WHERE id = ?',
-      [data.nombre, data.meses_garantia, data.descripcion ?? null, data.activo ? 1 : 0, id]);
+      'UPDATE garantia_plantillas SET nombre = ?, meses_garantia = ?, permanente = ?, descripcion = ?, activo = ? WHERE id = ?',
+      [data.nombre, data.meses_garantia, data.permanente ? 1 : 0, data.descripcion ?? null, data.activo ? 1 : 0, id]);
     await reemplazarPuntos(cx, id, data.puntos);
-    return obtener(id);
   });
+  return obtener(id); // ya commiteado
 }
 
 // Reemplaza en bloque los puntos de una plantilla (más simple y sin drift que diff por punto).
