@@ -70,7 +70,7 @@ function JefeLogin({ onEntrar }: { onEntrar: (u: string) => void }) {
   return (
     <div className="jefe-bg">
       <form className="jefe-login" onSubmit={submit}>
-        <div className="jefe-lock">🔒</div>
+        <div className="jefe-eyebrow">Reportes</div>
         <h1>Panel del Jefe</h1>
         <p className="jefe-sub">Acceso restringido · Raíces Duranguenses</p>
         <input placeholder="Usuario" value={usuario} onChange={(e) => setUsuario(e.target.value)} autoFocus />

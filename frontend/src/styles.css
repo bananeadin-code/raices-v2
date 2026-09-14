@@ -144,7 +144,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .jefe-bg { min-height: 100vh; background: #0f172a; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .jefe-login { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 32px 28px; width: 340px;
   display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.4); text-align: center; }
-.jefe-lock { font-size: 30px; }
+.jefe-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #3b82f6; }
 .jefe-login h1 { color: #f1f5f9; font-size: 22px; margin: 4px 0 0; }
 .jefe-sub { color: #94a3b8; font-size: 12px; margin: 0 0 10px; }
 .jefe-bg .jefe-login input { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 8px; padding: 11px 12px; font-size: 14px; }
