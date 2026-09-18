@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -21,6 +22,15 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
   cancelada: { label: 'Cancelada', cls: 'badge-danger' },
 };
 const fecha = (s?: string | null) => (s ? new Date(s).toLocaleDateString('es-MX') : '—');
+
+const REPORTE: ColReporte<Tarea>[] = [
+  { header: 'Tema', get: (t) => t.tema },
+  { header: 'Responsable', get: (t) => t.responsable },
+  { header: 'Asignó', get: (t) => t.asignador },
+  { header: 'Límite', get: (t) => fecha(t.fecha_limite) },
+  { header: 'Estado', get: (t) => ESTADOS[t.estado]?.label ?? t.estado },
+  { header: 'Respuesta', get: (t) => t.respuesta || '' },
+];
 
 export function Tareas() {
   const { puede } = useAuth();
@@ -93,7 +103,10 @@ export function Tareas() {
     <section>
       <div className="page-head">
         <h1>Tareas</h1>
-        {puede('tareas:crear') && <button className="primario" onClick={nueva}>Asignar tarea</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Tareas" path={path} columnas={REPORTE} orientacion="portrait" />
+          {puede('tareas:crear') && <button className="primario" onClick={nueva}>Asignar tarea</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar por tema..." />

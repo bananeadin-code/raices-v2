@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -14,6 +15,14 @@ interface Supervision {
   id: number; fecha: string; ubicacion?: string | null; observaciones: string;
   supervisor: string; cliente: string;
 }
+
+const REPORTE: ColReporte<Supervision>[] = [
+  { header: 'Fecha', get: (s) => new Date(s.fecha).toLocaleString('es-MX') },
+  { header: 'Supervisor', get: (s) => s.supervisor },
+  { header: 'Cliente', get: (s) => s.cliente },
+  { header: 'Ubicación', get: (s) => s.ubicacion || '' },
+  { header: 'Observaciones', get: (s) => s.observaciones },
+];
 
 export function Supervision() {
   const { puede } = useAuth();
@@ -51,7 +60,10 @@ export function Supervision() {
     <section>
       <div className="page-head">
         <h1>Supervisión</h1>
-        {puede('supervision:crear') && <button className="primario" onClick={nueva}>Registrar visita</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Supervisiones" path="/supervisiones" columnas={REPORTE} />
+          {puede('supervision:crear') && <button className="primario" onClick={nueva}>Registrar visita</button>}
+        </div>
       </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13 }}>
         Bitácora de visitas y supervisiones a clientes u obras.

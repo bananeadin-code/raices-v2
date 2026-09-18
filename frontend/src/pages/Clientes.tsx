@@ -5,11 +5,21 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Cliente> = { nombre: '', telefono: '', ciudad: '', limite_credito: 0 };
+
+const REPORTE: ColReporte<Cliente>[] = [
+  { header: 'Nombre', get: (c) => c.nombre },
+  { header: 'Teléfono', get: (c) => c.telefono ?? '' },
+  { header: 'Correo', get: (c) => c.email ?? '' },
+  { header: 'RFC', get: (c) => c.rfc ?? '' },
+  { header: 'Ciudad', get: (c) => c.ciudad ?? '' },
+  { header: 'Límite crédito', align: 'right', get: (c) => `$${Number(c.limite_credito).toFixed(2)}` },
+];
 
 // Catálogos SAT (subconjunto común) para agilizar el llenado.
 const REGIMENES: [string, string][] = [
@@ -69,7 +79,10 @@ export function Clientes() {
     <section>
       <div className="page-head">
         <h1>Clientes</h1>
-        {puede('clientes:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Clientes" path="/clientes" columnas={REPORTE} />
+          {puede('clientes:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar cliente..." />

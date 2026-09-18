@@ -7,6 +7,7 @@ import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { RemisionPrint } from '../components/RemisionPrint';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -19,6 +20,16 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
   entregada: { label: 'Entregada', cls: 'badge-ok' },
   cancelada: { label: 'Cancelada', cls: 'badge-danger' },
 };
+
+const REPORTE: ColReporte<RemisionRow>[] = [
+  { header: 'Folio', align: 'right', get: (r) => r.folio },
+  { header: 'Fecha', get: (r) => new Date(r.fecha).toLocaleDateString('es-MX') },
+  { header: 'Cliente', get: (r) => r.cliente },
+  { header: 'Sucursal', get: (r) => r.sucursal },
+  { header: 'Venta', get: (r) => (r.venta_folio != null ? `#${r.venta_folio}` : '—') },
+  { header: 'Artículos', align: 'right', get: (r) => r.renglones },
+  { header: 'Estado', get: (r) => ESTADOS[r.estado]?.label ?? r.estado },
+];
 
 export function Remisiones() {
   const { puede } = useAuth();
@@ -128,7 +139,10 @@ export function Remisiones() {
     <section>
       <div className="page-head">
         <h1>Remisiones</h1>
-        {puede('remisiones:crear') && <button className="primario" onClick={nuevo}>Nueva remisión</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Remisiones" path={path} columnas={REPORTE} />
+          {puede('remisiones:crear') && <button className="primario" onClick={nuevo}>Nueva remisión</button>}
+        </div>
       </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13, maxWidth: 680 }}>
         Nota de entrega de artículos. Puedes generarla desde una venta (copia sus artículos) o capturarla a mano.

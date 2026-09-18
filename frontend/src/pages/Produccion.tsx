@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -21,6 +22,15 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
   terminado: { label: 'Terminado', cls: 'badge-ok' },
   cancelado: { label: 'Cancelado', cls: 'badge-danger' },
 };
+
+const REPORTE: ColReporte<ProduccionRow>[] = [
+  { header: 'Folio', align: 'right', get: (p) => p.folio },
+  { header: 'Fecha', get: (p) => new Date(p.fecha).toLocaleDateString('es-MX') },
+  { header: 'Artículo', get: (p) => p.articulo },
+  { header: 'Cantidad', align: 'right', get: (p) => Number(p.cantidad).toLocaleString('es-MX') },
+  { header: 'Sucursal', get: (p) => p.sucursal },
+  { header: 'Estado', get: (p) => ESTADOS[p.estado]?.label ?? p.estado },
+];
 
 export function Produccion() {
   const { puede } = useAuth();
@@ -94,7 +104,10 @@ export function Produccion() {
     <section>
       <div className="page-head">
         <h1>Producción</h1>
-        {puede('produccion:crear') && <button className="primario" onClick={nuevo}>Nueva producción</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Producción" path="/produccion" columnas={REPORTE} />
+          {puede('produccion:crear') && <button className="primario" onClick={nuevo}>Nueva producción</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar por artículo..." />

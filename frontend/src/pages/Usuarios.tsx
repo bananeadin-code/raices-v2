@@ -6,12 +6,23 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 type Form = Partial<UsuarioRow> & { password?: string };
 const VACIO: Form = { usuario: '', nombre: '', password: '' };
+const REPORTE: ColReporte<UsuarioRow>[] = [
+  { header: 'Usuario', get: (u) => u.usuario },
+  { header: 'Nombre', get: (u) => u.nombre },
+  { header: 'Apellidos', get: (u) => u.apellidos ?? '' },
+  { header: 'Correo', get: (u) => u.email ?? '' },
+  { header: 'Teléfono', get: (u) => u.telefono ?? '' },
+  { header: 'Rol', get: (u) => u.rol ?? '' },
+  { header: 'Sucursal', get: (u) => u.sucursal ?? '' },
+  { header: 'Activo', align: 'center', get: (u) => (u.activo ? 'Sí' : 'No') },
+];
 
 export function Usuarios() {
   const { puede } = useAuth();
@@ -84,7 +95,10 @@ export function Usuarios() {
     <section>
       <div className="page-head">
         <h1>Usuarios</h1>
-        {puede('usuarios:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Usuarios" path={inactivos ? '/usuarios?inactivos=1' : '/usuarios'} columnas={REPORTE} />
+          {puede('usuarios:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar usuario..." />

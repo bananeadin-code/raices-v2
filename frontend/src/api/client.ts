@@ -41,3 +41,21 @@ export const api = {
   getAll: <T>(path: string) =>
     request<{ data: T[] }>(`${path}${path.includes('?') ? '&' : '?'}pageSize=500`).then((r) => r.data),
 };
+
+// Trae TODOS los registros de un endpoint paginado (recorre páginas hasta completar `total`).
+// Se usa para los reportes en PDF, que deben incluir todos los renglones.
+export async function getAllRows<T>(path: string): Promise<T[]> {
+  const sep = path.includes('?') ? '&' : '?';
+  let page = 1;
+  let all: T[] = [];
+  let total = Infinity;
+  while (all.length < total) {
+    const r = await api.get<{ data: T[]; total: number }>(`${path}${sep}page=${page}&pageSize=500`);
+    total = r.total;
+    if (r.data.length === 0) break;
+    all = all.concat(r.data);
+    page++;
+    if (page > 200) break; // tope de seguridad (100k registros)
+  }
+  return all;
+}

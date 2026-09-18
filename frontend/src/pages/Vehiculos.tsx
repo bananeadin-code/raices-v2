@@ -5,11 +5,16 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 interface Vehiculo { id: number; nombre: string; placas?: string | null; activo: number; }
+const REPORTE: ColReporte<Vehiculo>[] = [
+  { header: 'Vehículo', get: (v) => v.nombre },
+  { header: 'Placas', get: (v) => v.placas || '' },
+];
 const VACIO: Partial<Vehiculo> = { nombre: '', placas: '' };
 
 const money = (n: number) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
@@ -81,7 +86,10 @@ export function Vehiculos() {
     <section>
       <div className="page-head">
         <h1>Vehículos</h1>
-        {puede('vehiculos:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Vehículos" path="/vehiculos" columnas={REPORTE} orientacion="portrait" />
+          {puede('vehiculos:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar vehículo..." />

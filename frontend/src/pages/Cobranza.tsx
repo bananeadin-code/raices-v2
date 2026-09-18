@@ -6,12 +6,24 @@ import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { NotaPrint } from '../components/NotaPrint';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const money = (n: number) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 const fecha = (s?: string | null) => (s ? new Date(s).toLocaleDateString('es-MX') : '—');
+
+const REPORTE: ColReporte<CobranzaRow>[] = [
+  { header: 'Folio', align: 'right', get: (v) => v.folio },
+  { header: 'Cliente', get: (v) => v.cliente },
+  { header: 'Sucursal', get: (v) => v.sucursal },
+  { header: 'Vence', get: (v) => fecha(v.fecha_vencimiento) },
+  { header: 'Vencida', align: 'center', get: (v) => (v.vencida ? 'Sí' : 'No') },
+  { header: 'Total', align: 'right', get: (v) => money(v.total) },
+  { header: 'Pagado', align: 'right', get: (v) => money(v.pagado) },
+  { header: 'Saldo', align: 'right', get: (v) => money(v.saldo) },
+];
 
 export function Cobranza() {
   const { puede } = useAuth();
@@ -60,7 +72,10 @@ export function Cobranza() {
 
   return (
     <section>
-      <div className="page-head"><h1>Cobranza</h1></div>
+      <div className="page-head">
+        <h1>Cobranza</h1>
+        <BotonReporte titulo="Reporte de Cobranza (saldos por cobrar)" path="/ventas/cobranza" columnas={REPORTE} />
+      </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13 }}>
         Ventas a crédito con saldo pendiente. Las <span className="badge badge-danger">vencidas</span> aparecen primero.
       </p>

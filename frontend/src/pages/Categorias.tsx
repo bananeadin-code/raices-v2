@@ -5,11 +5,13 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Categoria> = { nombre: '' };
+const REPORTE: ColReporte<Categoria>[] = [{ header: 'Categoría', get: (c) => c.nombre }];
 
 export function Categorias() {
   const { puede } = useAuth();
@@ -41,7 +43,10 @@ export function Categorias() {
     <section>
       <div className="page-head">
         <h1>Categorías</h1>
-        {puede('categorias:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Categorías" path="/categorias" columnas={REPORTE} orientacion="portrait" />
+          {puede('categorias:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar categoría..." />

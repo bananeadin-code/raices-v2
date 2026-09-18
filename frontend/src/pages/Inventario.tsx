@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { KardexModal } from '../components/KardexModal';
 import { useAuth } from '../auth/AuthContext';
@@ -37,6 +38,16 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
 
   const etiqueta = tipo === 'articulo' ? 'Artículo' : 'Materia';
   const titulo = tipo === 'articulo' ? 'Inventario · Artículos' : 'Inventario · Materiales';
+
+  const reporteCols: ColReporte<Existencia>[] = [
+    { header: 'Sucursal', get: (e) => e.sucursal },
+    { header: etiqueta, get: (e) => e.item },
+    { header: tipo === 'articulo' ? 'Categoría' : 'Unidad', get: (e) => (tipo === 'articulo' ? e.categoria ?? '' : e.unidad ?? '') },
+    { header: 'Cantidad', align: 'right', get: (e) => Number(e.cantidad).toLocaleString('es-MX') },
+    { header: 'Reservado', align: 'right', get: (e) => Number(e.reservado).toLocaleString('es-MX') },
+    { header: 'Disponible', align: 'right', get: (e) => Number(e.disponible).toLocaleString('es-MX') },
+    { header: 'Mínimo', align: 'right', get: (e) => (e.minimo != null ? String(e.minimo) : '') },
+  ];
 
   useEffect(() => {
     api.getAll<Sucursal>('/sucursales').then(setSucursales).catch(() => {});
@@ -100,12 +111,15 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
     <section>
       <div className="page-head">
         <h1>{titulo}</h1>
-        {puede('inventario:editar') && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="primario" onClick={abrirMov}>Movimiento</button>
-            <button onClick={abrirTras}>Traspaso</button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo={titulo} path={path} columnas={reporteCols} />
+          {puede('inventario:editar') && (
+            <>
+              <button className="primario" onClick={abrirMov}>Movimiento</button>
+              <button onClick={abrirTras}>Traspaso</button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="list-toolbar">

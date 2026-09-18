@@ -7,6 +7,7 @@ import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { NotaPrint } from '../components/NotaPrint';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -21,6 +22,17 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
   entregada: { label: 'Entregada', cls: 'badge-ok' },
   cancelada: { label: 'Cancelada', cls: 'badge-danger' },
 };
+
+const REPORTE: ColReporte<VentaRow>[] = [
+  { header: 'Folio', align: 'right', get: (v) => v.folio },
+  { header: 'Fecha', get: (v) => new Date(v.fecha).toLocaleDateString('es-MX') },
+  { header: 'Cliente', get: (v) => v.cliente },
+  { header: 'Sucursal', get: (v) => v.sucursal },
+  { header: 'Pago', get: (v) => v.metodo_pago },
+  { header: 'Estado', get: (v) => ESTADOS[v.estado]?.label ?? v.estado },
+  { header: 'Total', align: 'right', get: (v) => money(v.total) },
+  { header: 'Saldo', align: 'right', get: (v) => (v.metodo_pago === 'credito' && v.estado !== 'cancelada' ? money(v.saldo) : '—') },
+];
 
 export function POS() {
   const { puede } = useAuth();
@@ -156,7 +168,10 @@ export function POS() {
     <section>
       <div className="page-head">
         <h1>Punto de Venta</h1>
-        {puede('pos:crear') && <button className="primario" onClick={nuevo}>Nueva venta</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Ventas" path={path} columnas={REPORTE} />
+          {puede('pos:crear') && <button className="primario" onClick={nuevo}>Nueva venta</button>}
+        </div>
       </div>
 
       <div className="list-toolbar">

@@ -6,11 +6,21 @@ import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Articulo> = { nombre: '', precio: 0, costo: 0, es_producible: false };
+
+const REPORTE: ColReporte<Articulo>[] = [
+  { header: 'Artículo', get: (a) => a.nombre },
+  { header: 'Categoría', get: (a) => a.categoria ?? '' },
+  { header: 'Precio', align: 'right', get: (a) => `$${Number(a.precio).toFixed(2)}` },
+  { header: 'Costo', align: 'right', get: (a) => `$${Number(a.costo).toFixed(2)}` },
+  { header: 'Se produce', align: 'center', get: (a) => (a.es_producible ? 'Sí' : 'No') },
+  { header: 'Garantía', get: (a) => a.garantia ?? '—' },
+];
 
 interface RecetaRow { materia_id: number | ''; cantidad: number | ''; }
 
@@ -90,7 +100,10 @@ export function Articulos() {
     <section>
       <div className="page-head">
         <h1>Artículos</h1>
-        {puede('articulos:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Artículos" path="/articulos" columnas={REPORTE} />
+          {puede('articulos:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar artículo..." />

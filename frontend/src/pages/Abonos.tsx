@@ -5,9 +5,20 @@ import { DataTable, Column } from '../components/DataTable';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 
 const money = (n: number) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 const METODOS: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia' };
+
+const REPORTE: ColReporte<AbonoHistorial>[] = [
+  { header: 'Fecha', get: (a) => new Date(a.fecha).toLocaleDateString('es-MX') },
+  { header: 'Cliente', get: (a) => a.cliente },
+  { header: 'Venta', align: 'right', get: (a) => `#${a.venta_folio}` },
+  { header: 'Método', get: (a) => METODOS[a.metodo] ?? a.metodo },
+  { header: 'Referencia', get: (a) => a.referencia || '' },
+  { header: 'Registró', get: (a) => a.usuario },
+  { header: 'Monto', align: 'right', get: (a) => money(a.monto) },
+];
 
 // Historial de abonos = pagos YA recibidos (a diferencia de Cobranza, que es lo que aún deben).
 export function Abonos() {
@@ -31,7 +42,10 @@ export function Abonos() {
 
   return (
     <section>
-      <div className="page-head"><h1>Abonos</h1></div>
+      <div className="page-head">
+        <h1>Abonos</h1>
+        <BotonReporte titulo="Reporte de Abonos (pagos recibidos)" path="/ventas/abonos" columnas={REPORTE} />
+      </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13, maxWidth: 680 }}>
         Historial de pagos recibidos sobre ventas a crédito. Para registrar un nuevo abono ve a
         <strong> Cobranza</strong> (donde están los saldos por cobrar).

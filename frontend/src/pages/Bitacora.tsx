@@ -1,6 +1,7 @@
 import { DataTable, Column } from '../components/DataTable';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 
 interface BitacoraRow {
@@ -66,6 +67,14 @@ function parseDetalle(detalle: any): { label: string; valor: string }[] {
   return chips;
 }
 
+const REPORTE: ColReporte<BitacoraRow>[] = [
+  { header: 'Fecha', get: (b) => new Date(b.fecha).toLocaleString('es-MX') },
+  { header: 'Usuario', get: (b) => b.usuario ?? b.login ?? '—' },
+  { header: 'Acción', get: (b) => accionLegible(b.accion).texto },
+  { header: 'Referencia', get: (b) => (b.entidad ? `${ENTIDADES[b.entidad] ?? b.entidad}${b.entidad_id ? ' #' + b.entidad_id : ''}` : '') },
+  { header: 'Detalle', get: (b) => parseDetalle(b.detalle).map((c) => `${c.label}: ${c.valor}`).join(' · ') },
+];
+
 export function Bitacora() {
   const { data, total, page, setPage, buscar, pageSize } = usePagedList<BitacoraRow>('/bitacora');
 
@@ -101,7 +110,10 @@ export function Bitacora() {
 
   return (
     <section>
-      <div className="page-head"><h1>Bitácora</h1></div>
+      <div className="page-head">
+        <h1>Bitácora</h1>
+        <BotonReporte titulo="Reporte de Bitácora" path="/bitacora" columnas={REPORTE} />
+      </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13 }}>
         Registro de quién hizo qué y cuándo, para auditoría.
       </p>

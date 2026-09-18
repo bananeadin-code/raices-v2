@@ -5,11 +5,20 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Materia> = { nombre: '', unidad: 'pza', costo: 0 };
+
+const REPORTE: ColReporte<Materia>[] = [
+  { header: 'Código', get: (m) => m.codigo ?? '' },
+  { header: 'Materia', get: (m) => m.nombre },
+  { header: 'Unidad', get: (m) => m.unidad },
+  { header: 'Costo', align: 'right', get: (m) => `$${Number(m.costo).toFixed(2)}` },
+  { header: 'Mínimo', align: 'right', get: (m) => (m.minimo != null ? String(m.minimo) : '') },
+];
 
 export function Materias() {
   const { puede } = useAuth();
@@ -46,7 +55,10 @@ export function Materias() {
     <section>
       <div className="page-head">
         <h1>Materias Primas</h1>
-        {puede('materias:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Materias Primas" path="/materias" columnas={REPORTE} />
+          {puede('materias:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar materia..." />

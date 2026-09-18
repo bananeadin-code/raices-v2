@@ -5,12 +5,20 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
 const VACIO: Partial<Sucursal> = { nombre: '', tipo: 'mixto' };
 const TIPOS: Sucursal['tipo'][] = ['tienda', 'almacen', 'fabrica', 'mixto'];
+const REPORTE: ColReporte<Sucursal>[] = [
+  { header: 'Nombre', get: (s) => s.nombre },
+  { header: 'Abrev.', get: (s) => s.abreviatura ?? '' },
+  { header: 'Tipo', get: (s) => s.tipo },
+  { header: 'Ciudad', get: (s) => s.ciudad ?? '' },
+  { header: 'Teléfono', get: (s) => s.telefono ?? '' },
+];
 
 export function Sucursales() {
   const { puede } = useAuth();
@@ -48,7 +56,10 @@ export function Sucursales() {
     <section>
       <div className="page-head">
         <h1>Sucursales</h1>
-        {puede('sucursales:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Sucursales" path="/sucursales" columnas={REPORTE} />
+          {puede('sucursales:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
+        </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar sucursal..." />

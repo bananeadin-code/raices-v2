@@ -5,9 +5,17 @@ import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
+import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
+
+const REPORTE: ColReporte<GarantiaPlantilla>[] = [
+  { header: 'Plantilla', get: (g) => g.nombre },
+  { header: 'Garantía', get: (g) => (g.permanente ? 'Permanente' : `${g.meses_garantia} meses`) },
+  { header: 'Puntos', align: 'right', get: (g) => String(g.puntos ?? 0) },
+  { header: 'Leyenda', get: (g) => g.descripcion ?? '' },
+];
 
 interface Form {
   id?: number;
@@ -76,7 +84,10 @@ export function Garantias() {
     <section>
       <div className="page-head">
         <h1>Garantías de entrega</h1>
-        {puede('garantias:crear') && <button className="primario" onClick={nuevo}>Nueva plantilla</button>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <BotonReporte titulo="Reporte de Garantías" path="/garantias" columnas={REPORTE} />
+          {puede('garantias:crear') && <button className="primario" onClick={nuevo}>Nueva plantilla</button>}
+        </div>
       </div>
       <p style={{ marginTop: -8, color: 'var(--ink-500)', fontSize: 13, maxWidth: 680 }}>
         Cada plantilla define los <strong>puntos de verificación de entrega</strong> que el cliente revisa y firma en la nota.
