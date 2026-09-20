@@ -16,6 +16,7 @@ import vehiculosRoutes from './modules/vehiculos/vehiculos.routes';
 import tareasRoutes from './modules/tareas/tareas.routes';
 import supervisionesRoutes from './modules/supervisiones/supervisiones.routes';
 import jefeRoutes from './modules/jefe/jefe.routes';
+import reportesRoutes from './modules/reportes/reportes.routes';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
@@ -41,6 +42,9 @@ router.use('/supervisiones', supervisionesRoutes);
 
 // Panel del jefe (reportes) — acceso propio, fuera de usuarios/roles
 router.use('/jefe', jefeRoutes);
+
+// Reportes operativos (corte del día)
+router.use('/reportes', reportesRoutes);
 
 // Acceso
 router.use('/usuarios', usuariosRoutes);

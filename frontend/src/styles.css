@@ -377,6 +377,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   vertical-align: top; word-break: break-word; overflow-wrap: anywhere; white-space: normal; }
 .reporte-tabla thead th { background: #eee; font-weight: 700; font-size: 11px; }
 .reporte-tabla tbody tr:nth-child(even) { background: #f6f6f6; }
+.reporte-seccion { margin-top: 16px; break-inside: avoid; }
+.reporte-sub { font-size: 13px; font-weight: 700; color: #111; border-bottom: 1px solid #999; padding-bottom: 3px; margin-bottom: 6px; }
+.reporte-mini-vacio { font-size: 12px; color: #888; margin: 4px 0; }
 
 @media print {
   .reporte-overlay { position: absolute; inset: 0; background: #fff; padding: 0; overflow: visible; }
