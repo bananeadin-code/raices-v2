@@ -106,7 +106,7 @@ export function POS() {
       });
       setModal(false);
       await reload();
-      toast.exito(cab.estado === 'pendiente' ? 'Venta pendiente (no afecta stock)' : 'Venta registrada y entregada');
+      toast.exito(cab.estado === 'pendiente' ? 'Venta pendiente (stock apartado)' : 'Venta registrada y entregada');
       verNota(r.id); // abre la nota lista para imprimir
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al registrar la venta'); }
   }
@@ -245,7 +245,7 @@ export function POS() {
           <label style={{ flex: 1 }}>Tipo
             <select value={cab.estado} onChange={(e) => setCab({ ...cab, estado: e.target.value })}>
               <option value="entregada">Venta directa (valida y descuenta stock)</option>
-              <option value="pendiente">Pendiente (no afecta stock; se entrega después)</option>
+              <option value="pendiente">Pendiente (aparta/reserva stock; se entrega después)</option>
             </select>
           </label>
           <label style={{ width: 120 }}>Descuento

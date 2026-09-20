@@ -261,11 +261,12 @@ CREATE TABLE venta_items (
   CONSTRAINT fk_vitem_articulo FOREIGN KEY (articulo_id) REFERENCES articulos(id)
 ) ENGINE=InnoDB;
 -- FLUJO DE STOCK EN VENTAS (en la app, dentro de UNA transaccion):
---   estado 'pendiente'  -> existencias.reservado += cantidad   (retiene stock, no lo consume)
---   'pendiente' -> 'confirmada' -> reservado -= cantidad; cantidad -= cantidad;
---                                  + movimiento tipo 'venta'
---   venta directa 'confirmada' -> cantidad -= cantidad; + movimiento 'venta'
---   'cancelada' -> libera reservado / revierte movimientos
+--   apartado 'pendiente'  -> existencias.reservado += cantidad  (aparta, no bloquea:
+--                            si no hay stock queda backorder / disponible negativo)
+--   'pendiente' -> 'entregada' -> reservado -= cantidad; cantidad -= cantidad;
+--                                  + movimiento tipo 'venta'  (valida stock FISICO)
+--   venta directa 'entregada' -> valida disponible; cantidad -= cantidad; + movimiento 'venta'
+--   'cancelada' desde pendiente -> libera reservado ; desde entregada -> reingresa cantidad
 
 -- ----------------------------------------------------------
 -- 4.1) GARANTIA / CONSENTIMIENTO DE ENTREGA

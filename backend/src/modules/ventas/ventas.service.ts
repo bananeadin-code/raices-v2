@@ -2,7 +2,7 @@ import { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import { pool, query, withTransaction } from '../../db/pool';
 import { ApiError } from '../../utils/http';
 import { paged, PageParams } from '../../utils/pagination';
-import { aplicarMovimiento, siguienteFolio } from '../inventario/inventario.service';
+import { aplicarMovimiento, ajustarReservado, siguienteFolio } from '../inventario/inventario.service';
 import { VentaCreate, AbonoCreate } from './ventas.schema';
 
 // ---- helpers de dinero (2 decimales, sin errores de coma flotante) ----
@@ -13,6 +13,13 @@ async function disponible(cx: PoolConnection, sucursalId: number, articuloId: nu
   const [rows]: any = await cx.query(
     'SELECT cantidad, reservado FROM existencias WHERE sucursal_id = ? AND articulo_id = ?', [sucursalId, articuloId]);
   return rows.length ? Number(rows[0].cantidad) - Number(rows[0].reservado) : 0;
+}
+
+// Stock físico (sin restar reservado), dentro de la transacción.
+async function fisico(cx: PoolConnection, sucursalId: number, articuloId: number): Promise<number> {
+  const [rows]: any = await cx.query(
+    'SELECT cantidad FROM existencias WHERE sucursal_id = ? AND articulo_id = ?', [sucursalId, articuloId]);
+  return rows.length ? Number(rows[0].cantidad) : 0;
 }
 
 // Deuda viva del cliente = suma de (total - abonos) de sus ventas a crédito no canceladas.
@@ -193,8 +200,10 @@ export async function crear(data: VentaCreate, usuarioId: number) {
   const nombrePorArticulo = new Map<number, string>(data.items.map((it) => [it.articulo_id, porId.get(it.articulo_id).nombre]));
 
   return withTransaction(async (cx) => {
-    // Solo la venta directa (entregada) valida y descuenta stock.
-    // El apartado (pendiente) NO toca stock: se manda a producción y se entrega después.
+    // Venta directa (entregada): valida disponible y descuenta stock físico.
+    // El apartado (pendiente) NO valida ni bloquea (puede ir a producción), pero SÍ
+    // reserva el stock (existencias.reservado) para no venderlo doble. Si no hay stock,
+    // queda como backorder (disponible negativo) hasta que se surta/produzca.
     if (entrega) {
       for (const l of lineas) {
         const disp = await disponible(cx, data.sucursal_id, l.articulo_id);
@@ -225,6 +234,9 @@ export async function crear(data: VentaCreate, usuarioId: number) {
           sucursal_id: data.sucursal_id, articulo_id: l.articulo_id, cantidad: -l.cantidad,
           tipo: 'venta', referencia_tipo: 'venta', referencia_id: ventaId, usuario_id: usuarioId,
         });
+      } else {
+        // Apartado: reserva el stock (no lo consume).
+        await ajustarReservado(cx, data.sucursal_id, 'articulo', l.articulo_id, l.cantidad);
       }
     }
 
@@ -245,14 +257,18 @@ export async function entregar(id: number, usuarioId: number) {
       WHERE vi.venta_id = ?`, [id]);
 
   return withTransaction(async (cx) => {
+    // Se valida el stock FÍSICO (no el disponible): esta venta ya tiene su propia
+    // reserva, así que restar reservado otra vez sería doble conteo.
     for (const it of items) {
-      const disp = await disponible(cx, venta.sucursal_id, it.articulo_id);
-      if (disp < Number(it.cantidad)) {
+      const fis = await fisico(cx, venta.sucursal_id, it.articulo_id);
+      if (fis < Number(it.cantidad)) {
         throw new ApiError(422,
-          `No se puede entregar: stock insuficiente de "${it.nombre}" (disponible ${disp}, se requieren ${it.cantidad}).`);
+          `No se puede entregar: aún no hay stock físico de "${it.nombre}" (físico ${fis}, se requieren ${it.cantidad}). Surte o produce antes de entregar.`);
       }
     }
     for (const it of items) {
+      // Libera la reserva y descuenta el físico (movimiento de venta).
+      await ajustarReservado(cx, venta.sucursal_id, 'articulo', it.articulo_id, -Number(it.cantidad));
       await aplicarMovimiento(cx, {
         sucursal_id: venta.sucursal_id, articulo_id: it.articulo_id, cantidad: -Number(it.cantidad),
         tipo: 'venta', referencia_tipo: 'venta', referencia_id: id, usuario_id: usuarioId,
@@ -276,7 +292,12 @@ export async function cancelar(id: number, usuarioId: number) {
   const items = await query<any>('SELECT articulo_id, cantidad FROM venta_items WHERE venta_id = ?', [id]);
 
   return withTransaction(async (cx) => {
-    if (venta.estado === 'entregada') {
+    if (venta.estado === 'pendiente') {
+      // Libera la reserva que tomó el apartado (no había stock consumido).
+      for (const it of items) {
+        await ajustarReservado(cx, venta.sucursal_id, 'articulo', it.articulo_id, -Number(it.cantidad));
+      }
+    } else if (venta.estado === 'entregada') {
       // Reingresa el stock que se había descontado al entregar.
       for (const it of items) {
         await aplicarMovimiento(cx, {
