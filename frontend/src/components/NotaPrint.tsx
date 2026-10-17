@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { VentaDetalle } from '../types';
 
@@ -135,15 +136,28 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
 // Nota / recibo imprimible. Sale Original + Copia en una sola hoja (media hoja c/u).
 // Se imprime o se guarda como PDF desde el navegador (Ctrl+P → "Guardar como PDF").
 export function NotaPrint({ venta, onClose }: { venta: VentaDetalle; onClose: () => void }) {
+  const dobleRef = useRef<HTMLDivElement>(null);
+
+  // Auto-ajuste: si los dos ejemplares (Original + Copia) no caben en una hoja
+  // tamaño CARTA vertical, se reduce un poco la escala para que SIEMPRE quepan.
+  useLayoutEffect(() => {
+    const el = dobleRef.current;
+    if (!el) return;
+    el.style.zoom = '1';
+    const alturaUtil = 935; // px útiles de CARTA vertical (279mm) con margen, dejando holgura
+    const alto = el.scrollHeight;
+    if (alto > alturaUtil) el.style.zoom = String(Math.max(0.55, alturaUtil / alto));
+  }, [venta]);
+
   return createPortal(
     <div className="nota-overlay">
-      <style>{`@media print { @page { size: A4 portrait; margin: 8mm; } }`}</style>
+      <style>{`@media print { @page { size: letter portrait; margin: 8mm; } }`}</style>
       <div className="nota-actions">
         <button className="primario" onClick={() => window.print()}>Imprimir / Guardar PDF</button>
         <button onClick={onClose}>Cerrar</button>
       </div>
 
-      <div className="nota-doble">
+      <div className="nota-doble" ref={dobleRef}>
         <NotaCuerpo venta={venta} etiqueta="Original" />
         <div className="nota-corte"><span>— — — — — — — — — — — corte — — — — — — — — — — —</span></div>
         <NotaCuerpo venta={venta} etiqueta="Copia" />
