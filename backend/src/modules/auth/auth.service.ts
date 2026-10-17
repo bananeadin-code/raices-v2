@@ -43,3 +43,14 @@ export async function login(usuario: string, password: string) {
   const token = jwt.sign(payload, env.jwt.secret, { expiresIn: env.jwt.expires } as jwt.SignOptions);
   return { token, usuario: payload };
 }
+
+// Cambio de la PROPIA contraseña: se exige la contraseña actual para confirmar.
+export async function cambiarMiPassword(userId: number, actual: string, nueva: string) {
+  const rows = await query<any>('SELECT password_hash FROM usuarios WHERE id = ?', [userId]);
+  if (!rows[0]) throw new ApiError(404, 'Usuario no encontrado.');
+  const ok = await bcrypt.compare(actual, rows[0].password_hash);
+  if (!ok) throw new ApiError(401, 'La contraseña actual no es correcta.');
+  const hash = await bcrypt.hash(nueva, 10);
+  await query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [hash, userId]);
+  return { ok: true };
+}

@@ -8,6 +8,11 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const cambioPasswordSchema = z.object({
+  password_actual: z.string().min(1, 'Escribe tu contraseña actual.'),
+  password: z.string().min(4, 'La nueva contraseña debe tener al menos 4 caracteres.').max(100),
+});
+
 export async function login(req: Request, res: Response) {
   const { usuario, password } = loginSchema.parse(req.body);
   const result = await service.login(usuario, password);
@@ -17,4 +22,11 @@ export async function login(req: Request, res: Response) {
 
 export async function me(req: Request, res: Response) {
   res.json({ usuario: req.user });
+}
+
+export async function cambiarPassword(req: Request, res: Response) {
+  const d = cambioPasswordSchema.parse(req.body);
+  await service.cambiarMiPassword(req.user!.id, d.password_actual, d.password);
+  await bitacora.registrar(req.user!.id, 'password.cambiar', 'usuario', req.user!.id);
+  res.json({ ok: true });
 }

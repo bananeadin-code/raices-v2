@@ -13,6 +13,7 @@ interface BitacoraRow {
 // Traducción de cada código de acción a una frase legible + color del badge.
 const ACCIONES: Record<string, { texto: string; tono: string }> = {
   'login': { texto: 'Inició sesión', tono: 'muted' },
+  'password.cambiar': { texto: 'Cambió su contraseña', tono: 'info' },
   'venta.entregar': { texto: 'Registró una venta', tono: 'ok' },
   'venta.pendiente': { texto: 'Dejó una venta pendiente', tono: 'warn' },
   'venta.cancelar': { texto: 'Canceló una venta', tono: 'danger' },
@@ -32,7 +33,7 @@ const ACCIONES: Record<string, { texto: string; tono: string }> = {
 
 const ENTIDADES: Record<string, string> = {
   venta: 'Venta', remision: 'Remisión', produccion: 'Producción', inventario: 'Inventario',
-  articulo: 'Artículo', materia: 'Materia',
+  articulo: 'Artículo', materia: 'Materia', usuario: 'Usuario', tarea: 'Tarea',
 };
 
 // Etiquetas legibles para las llaves del detalle (y qué campos ocultar).

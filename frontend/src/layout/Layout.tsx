@@ -1,7 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { api } from '../api/client';
 import { Icon } from '../components/Icon';
+import { Modal } from '../components/Modal';
+import { useToast } from '../components/Toast';
 
 interface MenuItem { to: string; label: string; permiso: string; icon: string; }
 interface MenuGrupo { titulo: string; items: MenuItem[]; }
@@ -53,9 +56,28 @@ const MENU: MenuGrupo[] = [
 
 export function Layout({ children }: { children: ReactNode }) {
   const { usuario, logout, puede } = useAuth();
+  const toast = useToast();
   const loc = useLocation();
   const iniciales = (usuario?.usuario ?? '?').slice(0, 2).toUpperCase();
   const activo = MENU.flatMap((g) => g.items).find((m) => m.to === loc.pathname);
+
+  // Cambio de la propia contraseña (confirma con la contraseña actual).
+  const [modalPass, setModalPass] = useState(false);
+  const [p0, setP0] = useState('');
+  const [p1, setP1] = useState('');
+  const [p2, setP2] = useState('');
+  const [errPass, setErrPass] = useState('');
+  function abrirPass() { setErrPass(''); setP0(''); setP1(''); setP2(''); setModalPass(true); }
+  async function guardarPass() {
+    setErrPass('');
+    if (!p0) { setErrPass('Escribe tu contraseña actual.'); return; }
+    if (p1.length < 4) { setErrPass('La nueva contraseña debe tener al menos 4 caracteres.'); return; }
+    if (p1 !== p2) { setErrPass('Las contraseñas nuevas no coinciden.'); return; }
+    try {
+      await api.put('/auth/password', { password_actual: p0, password: p1 });
+      setModalPass(false); toast.exito('Contraseña actualizada');
+    } catch (e) { setErrPass(e instanceof Error ? e.message : 'No se pudo cambiar'); }
+  }
   return (
     <div className="app">
       <aside className="sidebar">
@@ -94,6 +116,9 @@ export function Layout({ children }: { children: ReactNode }) {
                 <span className="user-role">{usuario?.rol}</span>
               </div>
             </div>
+            <button className="btn-ghost" onClick={abrirPass} aria-label="Cambiar mi contraseña">
+              <Icon name="settings" size={18} /> Contraseña
+            </button>
             <button className="btn-ghost" onClick={logout} aria-label="Cerrar sesión">
               <Icon name="logout" size={18} /> Salir
             </button>
@@ -101,6 +126,19 @@ export function Layout({ children }: { children: ReactNode }) {
         </header>
         <main>{children}</main>
       </div>
+
+      <Modal abierto={modalPass} titulo="Cambiar mi contraseña" onCerrar={() => setModalPass(false)} onGuardar={guardarPass}>
+        <label>Contraseña actual
+          <input type="password" value={p0} onChange={(e) => setP0(e.target.value)} autoFocus />
+        </label>
+        <label>Nueva contraseña
+          <input type="password" value={p1} onChange={(e) => setP1(e.target.value)} />
+        </label>
+        <label>Confirmar nueva contraseña
+          <input type="password" value={p2} onChange={(e) => setP2(e.target.value)} />
+        </label>
+        {errPass && <p className="error">{errPass}</p>}
+      </Modal>
     </div>
   );
 }

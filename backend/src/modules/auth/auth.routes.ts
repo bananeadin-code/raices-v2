@@ -9,4 +9,5 @@ const router = Router();
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, msg: 'Demasiados intentos de inicio de sesión. Espera unos minutos.' });
 router.post('/login', loginLimiter, asyncHandler(controller.login));
 router.get('/me', auth, asyncHandler(controller.me));
+router.put('/password', auth, asyncHandler(controller.cambiarPassword));
 export default router;
