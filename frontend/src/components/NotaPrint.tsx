@@ -29,7 +29,7 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
           <div className="nota-empresa-dir">{direccionSucursal(venta)}</div>
           {venta.sucursal_telefono && <div className="nota-empresa-dir">Tel. {venta.sucursal_telefono}</div>}
         </div>
-        <div className="nota-fecha">Fecha: {fecha(venta.fecha)}</div>
+        <div className="nota-fecha">Fecha de venta: {fecha(venta.fecha)}</div>
       </div>
 
       {/* Datos del cliente */}
@@ -122,7 +122,7 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
       </div>
       <div className="nota-firmas">
         <div><div className="linea"></div>Nombre</div>
-        <div><div className="linea"></div>Fecha</div>
+        <div><div className="linea"></div>Fecha de recibido</div>
         <div><div className="linea"></div>Firma</div>
       </div>
 
