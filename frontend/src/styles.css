@@ -315,49 +315,57 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .nota-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 500; overflow: auto;
   display: flex; flex-direction: column; align-items: center; padding: 24px 16px 60px; }
 .nota-actions { display: flex; gap: 8px; margin-bottom: 14px; }
-.nota-print { background: #fff; color: #111; width: 720px; max-width: 100%; padding: 28px 32px;
-  box-shadow: var(--sh-lg); border-radius: 6px; font-size: 13px; line-height: 1.4; }
+/* Hoja completa: dos ejemplares (Original + Copia) a media hoja cada uno. */
+.nota-doble { background: #fff; color: #111; width: 720px; max-width: 100%; box-shadow: var(--sh-lg); border-radius: 6px; }
+.nota-copia { position: relative; padding: 10px 22px; font-size: 12px; line-height: 1.3; }
+.nota-copia-tag { position: absolute; top: 6px; right: 10px; font-size: 9px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: #666; border: 1px solid #bbb; border-radius: 3px; padding: 0 5px; }
+.nota-corte { text-align: center; color: #999; font-size: 10px; letter-spacing: 1px; overflow: hidden; white-space: nowrap; }
+.nota-garantia-cond { font-size: 10.5px; color: #222; margin-top: 7px; line-height: 1.4; text-align: justify; }
 .nota-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 10px;
   border-bottom: 2px solid #111; padding-bottom: 10px; }
 .nota-recibo { font-weight: 700; font-size: 15px; }
 .nota-empresa { text-align: center; }
-.nota-empresa-nombre { font-weight: 800; font-size: 19px; letter-spacing: .3px; }
+.nota-empresa-nombre { font-weight: 800; font-size: 16px; letter-spacing: .3px; }
 .nota-empresa-dir { font-size: 11px; color: #444; }
 .nota-fecha { text-align: right; font-size: 12px; }
-.nota-cliente { border: 1px solid #999; border-top: none; padding: 8px 10px; }
+.nota-cliente { border: 1px solid #999; border-top: none; padding: 5px 9px; }
 .nota-cliente-titulo { text-align: center; font-weight: 700; font-size: 12px; text-transform: uppercase;
   letter-spacing: .5px; margin-bottom: 6px; }
 .nota-cliente-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; font-size: 12.5px; }
 .nota-cliente-grid .col2 { grid-column: 1 / -1; }
 .nota-cliente-grid span { color: #555; font-weight: 600; }
-.nota-tabla { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12.5px; }
-.nota-tabla th, .nota-tabla td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
+.nota-tabla { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 11.5px; }
+.nota-tabla th, .nota-tabla td { border: 1px solid #999; padding: 3px 8px; text-align: left; }
 .nota-tabla thead th { background: #f1f1f1; font-size: 12px; }
 .nota-tabla tfoot td { border: none; padding: 3px 8px; }
 .nota-total-row td { font-weight: 800; font-size: 14px; border-top: 1px solid #111 !important; }
 .nota-pago { margin-top: 8px; font-size: 12.5px; text-transform: capitalize; }
-.nota-garantia { margin-top: 16px; border: 1px solid #111; padding: 10px 12px; }
+.nota-garantia { margin-top: 5px; border: 1px solid #111; padding: 5px 9px; }
 .nota-garantia-bloque + .nota-garantia-bloque { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #999; }
 .nota-garantia-titulo { font-weight: 700; font-size: 13px; }
 .nota-garantia-meses { font-weight: 600; color: #444; }
 .nota-garantia-aplica { font-size: 12px; color: #222; margin-top: 2px; }
 .nota-garantia-leyenda { font-size: 12px; color: #444; margin: 2px 0 6px; font-style: italic; }
 .nota-garantia-puntos { list-style: none; margin: 0; padding: 0; }
-.nota-garantia-puntos li { font-size: 12.5px; padding: 2px 0; }
-.nota-garantia-puntos .chk { font-size: 15px; margin-right: 6px; }
-.nota-consentimiento { margin-top: 14px; font-size: 12px; line-height: 1.5; text-align: justify; }
-.nota-firmas { display: flex; gap: 28px; margin-top: 34px; }
-.nota-firmas > div { flex: 1; text-align: center; font-size: 12px; color: #333; }
+.nota-garantia-puntos li { font-size: 11px; padding: 0; }
+.nota-garantia-puntos .chk { font-size: 13px; margin-right: 5px; }
+.nota-consentimiento { margin-top: 6px; font-size: 11px; line-height: 1.4; text-align: justify; }
+.nota-firmas { display: flex; gap: 24px; margin-top: 14px; }
+.nota-firmas > div { flex: 1; text-align: center; font-size: 11px; color: #333; }
 .nota-firmas .linea { border-top: 1px solid #111; margin-bottom: 4px; height: 0; }
-.nota-pie { margin-top: 22px; text-align: center; font-size: 11px; color: #666; }
+.nota-pie { margin-top: 8px; text-align: center; font-size: 10px; color: #666; }
 
 @media print {
   body { background: #fff !important; }
   body * { visibility: hidden !important; }
-  .nota-print, .nota-print * { visibility: visible !important; }
+  .nota-doble, .nota-doble * { visibility: visible !important; }
   .nota-overlay { position: absolute; inset: 0; background: #fff; padding: 0; overflow: visible; }
   .nota-actions { display: none !important; }
-  .nota-print { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border-radius: 0; padding: 0 6mm; }
+  .nota-doble { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border-radius: 0; }
+  .nota-copia { break-inside: avoid; }          /* no partir un ejemplar entre hojas */
+  .nota-corte { margin: 4mm 0; }
+  .nota-tabla thead th, .nota-total-row td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* ===================== Reporte por módulo (tabla imprimible) ===================== */
