@@ -19,8 +19,6 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
   const esCredito = venta.metodo_pago === 'credito';
   return (
     <div className="nota-copia">
-      <span className="nota-copia-tag">{etiqueta}</span>
-
       {/* Encabezado */}
       <div className="nota-head">
         <div><div className="nota-recibo">Recibo # {venta.folio}</div></div>
@@ -29,7 +27,10 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
           <div className="nota-empresa-dir">{direccionSucursal(venta)}</div>
           {venta.sucursal_telefono && <div className="nota-empresa-dir">Tel. {venta.sucursal_telefono}</div>}
         </div>
-        <div className="nota-fecha">Fecha de venta: {fecha(venta.fecha)}</div>
+        <div className="nota-fecha">
+          <span className="nota-copia-tag">{etiqueta}</span>
+          Fecha de venta: {fecha(venta.fecha)}
+        </div>
       </div>
 
       {/* Datos del cliente */}

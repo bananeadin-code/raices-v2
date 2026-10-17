@@ -318,7 +318,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* Hoja completa: dos ejemplares (Original + Copia) a media hoja cada uno. */
 .nota-doble { background: #fff; color: #111; width: 720px; max-width: 100%; box-shadow: var(--sh-lg); border-radius: 6px; }
 .nota-copia { position: relative; padding: 10px 22px; font-size: 12px; line-height: 1.3; }
-.nota-copia-tag { position: absolute; top: 6px; right: 10px; font-size: 9px; font-weight: 700; letter-spacing: .08em;
+.nota-copia-tag { display: block; width: fit-content; margin: 0 0 2px auto; font-size: 9px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: #666; border: 1px solid #bbb; border-radius: 3px; padding: 0 5px; }
 .nota-corte { text-align: center; color: #999; font-size: 10px; letter-spacing: 1px; overflow: hidden; white-space: nowrap; }
 .nota-garantia-cond { font-size: 10.5px; color: #222; margin-top: 7px; line-height: 1.4; text-align: justify; }
