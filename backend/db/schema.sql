@@ -235,7 +235,7 @@ CREATE TABLE ventas (
   fecha             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   estado            ENUM('pendiente','entregada','cancelada') NOT NULL DEFAULT 'pendiente',
                     -- pendiente = apartado (no toca stock); entregada = descuenta stock; cancelada = revierte
-  metodo_pago       ENUM('efectivo','tarjeta','transferencia','credito') NOT NULL DEFAULT 'efectivo',
+  metodo_pago       ENUM('efectivo','tarjeta','transferencia','credito','cortesia') NOT NULL DEFAULT 'efectivo',
   fecha_vencimiento DATE NULL,                      -- solo credito
   subtotal          DECIMAL(12,2) NOT NULL DEFAULT 0,
   descuento         DECIMAL(12,2) NOT NULL DEFAULT 0,

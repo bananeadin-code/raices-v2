@@ -75,7 +75,7 @@ async function disponibleActual(cx: PoolConnection, itemTipo: string, itemId: nu
   return rows.length ? Number(rows[0].cantidad) - Number(rows[0].reservado) : 0;
 }
 
-export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParams, sucursalId?: number) {
+export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParams, sucursalId?: number, categoriaId?: number) {
   const isArt = itemTipo === 'articulo';
   const from = isArt
     ? 'existencias e JOIN sucursales s ON s.id = e.sucursal_id JOIN articulos a ON a.id = e.articulo_id LEFT JOIN categorias c ON c.id = a.categoria_id'
@@ -86,6 +86,7 @@ export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParam
   const clauses = [isArt ? 'e.articulo_id IS NOT NULL' : 'e.materia_id IS NOT NULL'];
   const whereParams: any[] = [];
   if (sucursalId) { clauses.push('e.sucursal_id = ?'); whereParams.push(sucursalId); }
+  if (isArt && categoriaId) { clauses.push('a.categoria_id = ?'); whereParams.push(categoriaId); }
   return paged({
     select, from, where: clauses.join(' AND '), whereParams,
     search: { col: isArt ? 'a.nombre' : 'm.nombre', q: p.q },

@@ -13,6 +13,7 @@
     "migrate:ventas": "tsx src/db/alter-ventas-fase3.ts",
     "migrate:jefe": "tsx src/db/alter-jefe.ts",
     "migrate:extras": "tsx src/db/alter-extras.ts",
+    "migrate:ronda2": "tsx src/db/alter-ronda2.ts",
     "test": "vitest run"
   },
   "dependencies": {

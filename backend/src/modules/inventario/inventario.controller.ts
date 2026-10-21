@@ -7,7 +7,8 @@ import * as bitacora from '../bitacora/bitacora.service';
 export async function existencias(req: Request, res: Response) {
   const itemTipo = req.query.item_tipo === 'materia' ? 'materia' : 'articulo';
   const sucursalId = req.query.sucursal_id ? Number(req.query.sucursal_id) : undefined;
-  res.json(await service.existencias(itemTipo, readPageParams(req.query), sucursalId));
+  const categoriaId = req.query.categoria_id ? Number(req.query.categoria_id) : undefined;
+  res.json(await service.existencias(itemTipo, readPageParams(req.query), sucursalId, categoriaId));
 }
 
 export async function kardex(req: Request, res: Response) {

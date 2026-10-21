@@ -12,7 +12,8 @@ export const ventaCreate = z.object({
   // 'entregada' = venta directa (valida y descuenta stock ya).
   // 'pendiente' = apartado: NO toca stock (se manda a producción; se entrega después).
   estado: z.enum(['pendiente', 'entregada']).default('entregada'),
-  metodo_pago: z.enum(['efectivo', 'tarjeta', 'transferencia', 'credito']).default('efectivo'),
+  // 'cortesia' = venta a pura firma (sin pago ni crédito); no entra a cobranza ni a ingresos.
+  metodo_pago: z.enum(['efectivo', 'tarjeta', 'transferencia', 'credito', 'cortesia']).default('efectivo'),
   fecha_vencimiento: z.string().max(10).nullish(), // 'YYYY-MM-DD', solo crédito
   descuento: z.number().min(0).default(0),
   observaciones: z.string().max(200).nullish(),

@@ -240,6 +240,7 @@ export function POS() {
               <option value="tarjeta">Tarjeta</option>
               <option value="transferencia">Transferencia</option>
               <option value="credito">Crédito</option>
+              <option value="cortesia">Cortesía (sin pago, solo firma)</option>
             </select>
           </label>
           <label style={{ flex: 1 }}>Tipo

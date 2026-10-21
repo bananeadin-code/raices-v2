@@ -90,7 +90,7 @@ export interface VentaRow {
   folio: number;
   fecha: string;
   estado: 'pendiente' | 'entregada' | 'cancelada';
-  metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'credito';
+  metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'credito' | 'cortesia';
   total: number;
   fecha_vencimiento?: string | null;
   sucursal: string;

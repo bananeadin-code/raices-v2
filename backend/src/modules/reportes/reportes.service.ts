@@ -11,14 +11,15 @@ export async function reporteDia(fecha: string) {
        FROM ventas v JOIN sucursales s ON s.id=v.sucursal_id LEFT JOIN clientes c ON c.id=v.cliente_id
       WHERE DATE(v.fecha)=? ORDER BY v.folio`, [fecha]);
   const ventasTot = await query<any>(
-    `SELECT COUNT(*) n, IFNULL(SUM(total),0) total FROM ventas WHERE DATE(fecha)=? AND estado<>'cancelada'`, [fecha]);
+    `SELECT COUNT(*) n, IFNULL(SUM(total),0) total FROM ventas
+      WHERE DATE(fecha)=? AND estado<>'cancelada' AND metodo_pago<>'cortesia'`, [fecha]);
   const ventasPorMetodo = await query<any>(
     `SELECT metodo_pago metodo, COUNT(*) n, IFNULL(SUM(total),0) total
        FROM ventas WHERE DATE(fecha)=? AND estado<>'cancelada' GROUP BY metodo_pago ORDER BY total DESC`, [fecha]);
   const ventasPorSucursal = await query<any>(
     `SELECT s.nombre sucursal, COUNT(*) n, IFNULL(SUM(v.total),0) total
        FROM ventas v JOIN sucursales s ON s.id=v.sucursal_id
-      WHERE DATE(v.fecha)=? AND v.estado<>'cancelada' GROUP BY s.id ORDER BY total DESC`, [fecha]);
+      WHERE DATE(v.fecha)=? AND v.estado<>'cancelada' AND v.metodo_pago<>'cortesia' GROUP BY s.id ORDER BY total DESC`, [fecha]);
 
   const abonos = await query<any>(
     `SELECT ab.monto, ab.metodo, ab.referencia, v.folio venta_folio,

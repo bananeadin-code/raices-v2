@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { Sucursal } from '../types';
+import { Sucursal, Categoria } from '../types';
 import { DataTable, Column } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { Combobox } from '../components/Combobox';
@@ -24,10 +24,14 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
   const { puede } = useAuth();
   const toast = useToast();
   const [filtroSuc, setFiltroSuc] = useState('');
-  const path = `/inventario/existencias?item_tipo=${tipo}` + (filtroSuc ? `&sucursal_id=${filtroSuc}` : '');
+  const [filtroCat, setFiltroCat] = useState('');
+  const path = `/inventario/existencias?item_tipo=${tipo}`
+    + (filtroSuc ? `&sucursal_id=${filtroSuc}` : '')
+    + (tipo === 'articulo' && filtroCat ? `&categoria_id=${filtroCat}` : '');
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Existencia>(path);
 
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [modalMov, setModalMov] = useState(false);
   const [modalTras, setModalTras] = useState(false);
@@ -53,6 +57,7 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
     api.getAll<Sucursal>('/sucursales').then(setSucursales).catch(() => {});
     const itemsPath = tipo === 'articulo' ? '/articulos' : '/materias';
     api.getAll<any>(itemsPath).then((d) => setItems(d.map((x) => ({ id: x.id, nombre: x.nombre })))).catch(() => {});
+    if (tipo === 'articulo') api.getAll<Categoria>('/categorias').then(setCategorias).catch(() => {});
   }, [tipo]);
 
   function abrirMov() { setError(''); setMov({ tipo: 'entrada', item_id: '', sucursal_id: '', cantidad: '', motivo: '' }); setModalMov(true); }
@@ -124,6 +129,17 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
 
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder={`Buscar ${etiqueta.toLowerCase()}...`} />
+        {tipo === 'articulo' && (
+          <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+            Categoría:
+            <div style={{ width: 200 }}>
+              <Combobox
+                opciones={categorias.map((c) => ({ value: c.id, label: c.nombre }))}
+                value={filtroCat} onChange={setFiltroCat}
+                vacioLabel="Todas" placeholder="Todas" />
+            </div>
+          </label>
+        )}
         <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           Sucursal:
           <div style={{ width: 200 }}>

@@ -33,9 +33,9 @@ const num = (v: any) => Number(v ?? 0);
 
 async function resumen() {
   const hoy = await query<any>(
-    "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND DATE(fecha) = CURDATE()");
+    "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND metodo_pago <> 'cortesia' AND DATE(fecha) = CURDATE()");
   const mes = await query<any>(
-    "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND YEAR(fecha)=YEAR(CURDATE()) AND MONTH(fecha)=MONTH(CURDATE())");
+    "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND metodo_pago <> 'cortesia' AND YEAR(fecha)=YEAR(CURDATE()) AND MONTH(fecha)=MONTH(CURDATE())");
   const cartera = await query<any>(
     `SELECT IFNULL(SUM(v.total - IFNULL(a.pagado,0)),0) saldo
        FROM ventas v LEFT JOIN (SELECT venta_id, SUM(monto) pagado FROM abonos GROUP BY venta_id) a ON a.venta_id=v.id
@@ -65,7 +65,7 @@ async function resumen() {
 export async function reporteGeneral() {
   const ventasPorDia = await query<any>(
     `SELECT DATE(fecha) dia, IFNULL(SUM(total),0) monto, COUNT(*) n
-       FROM ventas WHERE estado<>'cancelada' AND fecha >= (CURDATE() - INTERVAL 29 DAY)
+       FROM ventas WHERE estado<>'cancelada' AND metodo_pago<>'cortesia' AND fecha >= (CURDATE() - INTERVAL 29 DAY)
       GROUP BY DATE(fecha) ORDER BY dia`);
   const topArticulos = await query<any>(
     `SELECT a.nombre, IFNULL(SUM(vi.cantidad),0) unidades, IFNULL(SUM(vi.importe),0) monto
@@ -74,7 +74,7 @@ export async function reporteGeneral() {
   const ventasPorSucursal = await query<any>(
     `SELECT s.nombre, IFNULL(SUM(v.total),0) monto, COUNT(*) n
        FROM ventas v JOIN sucursales s ON s.id=v.sucursal_id
-      WHERE v.estado<>'cancelada' GROUP BY s.id ORDER BY monto DESC`);
+      WHERE v.estado<>'cancelada' AND v.metodo_pago<>'cortesia' GROUP BY s.id ORDER BY monto DESC`);
   const ventasPorMetodo = await query<any>(
     `SELECT metodo_pago metodo, IFNULL(SUM(total),0) monto, COUNT(*) n
        FROM ventas WHERE estado<>'cancelada' GROUP BY metodo_pago ORDER BY monto DESC`);
