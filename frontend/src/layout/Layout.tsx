@@ -83,6 +83,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
+          <div className="marca-raidur"><img src="/logo-raidur.jpeg" alt="RaiDur" /></div>
           <div>
             <div className="brand-name">Raíces Duranguenses</div>
             <div className="brand-sub">Sistema administrativo</div>

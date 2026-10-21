@@ -23,6 +23,7 @@ export function Login() {
   return (
     <div className="login">
       <form onSubmit={submit}>
+        <div className="marca-raidur" style={{ margin: '0 auto 4px' }}><img src="/logo-raidur.jpeg" alt="RaiDur" /></div>
         <h1>Raíces Duranguenses</h1>
         <input placeholder="Usuario" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
         <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} />

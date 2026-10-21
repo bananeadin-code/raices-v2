@@ -82,6 +82,10 @@ input:focus, select:focus, textarea:focus {
 .app { display: flex; height: 100vh; overflow: hidden; }
 .sidebar { width: 246px; flex-shrink: 0; height: 100vh; overflow-y: auto; background: var(--side-bg); color: var(--side-fg); padding: 14px 12px; border-right: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; padding: 8px 8px 16px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.brand > div { min-width: 0; }
+/* En el sidebar el logo va más pequeño para que quepa junto al texto sin desbordar */
+.brand .marca-raidur { width: 84px; height: 31px; }
+.brand .marca-raidur img { width: 84px; margin-top: -45px; }
 .brand-name { letter-spacing: -.01em; }
 .brand-mark { width: 36px; height: 36px; border-radius: var(--r-md); flex-shrink: 0; color: #fff; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--brand-500), var(--accent-500)); box-shadow: var(--sh-sm); }
 .brand-name { font-weight: 700; color: var(--ink-900); font-size: 14px; line-height: 1.2; }
@@ -330,6 +334,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* Logo RaiDur recortado a su contenido (la imagen trae mucho margen blanco). */
 .marca-raidur { width: 120px; height: 44px; overflow: hidden; flex: none; }
 .marca-raidur img { width: 120px; display: block; margin-top: -64px; }
+/* Pastilla blanca para mostrar el logo sobre fondos oscuros (panel del jefe) */
+.marca-chip { background: #fff; border-radius: 10px; padding: 5px 10px; display: inline-flex; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
 .nota-empresa-dir { font-size: 11px; color: #444; }
 .nota-fecha { text-align: right; font-size: 12px; }
 .nota-cliente { border: 1px solid #999; border-top: none; padding: 5px 9px; }

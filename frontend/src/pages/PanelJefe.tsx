@@ -83,6 +83,7 @@ function JefeLogin({ onEntrar }: { onEntrar: (u: string) => void }) {
   return (
     <div className="jefe-bg">
       <form className="jefe-login" onSubmit={submit}>
+        <div className="marca-chip" style={{ margin: '0 auto 8px' }}><div className="marca-raidur"><img src="/logo-raidur.jpeg" alt="RaiDur" /></div></div>
         <div className="jefe-eyebrow">Reportes</div>
         <h1>Panel del Jefe</h1>
         <p className="jefe-sub">Acceso restringido · Raíces Duranguenses</p>
@@ -110,9 +111,12 @@ function JefeDashboard({ usuario, onUsuario, onSalir }: { usuario: string; onUsu
   return (
     <div className="jefe-shell">
       <header className="jefe-header">
-        <div>
-          <div className="jefe-title">Panel del Jefe</div>
-          <div className="jefe-usuario">Raíces Duranguenses · {usuario}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="marca-chip"><div className="marca-raidur"><img src="/logo-raidur.jpeg" alt="RaiDur" /></div></div>
+          <div>
+            <div className="jefe-title">Panel del Jefe</div>
+            <div className="jefe-usuario">Raíces Duranguenses · {usuario}</div>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="jefe-btn" onClick={() => setCambiar(true)}>Cambiar acceso</button>
