@@ -25,6 +25,7 @@ import { Tareas } from './pages/Tareas';
 import { Supervision } from './pages/Supervision';
 import { PanelJefe } from './pages/PanelJefe';
 import { ReporteDia } from './pages/ReporteDia';
+import { Caja } from './pages/Caja';
 import { Bitacora } from './pages/Bitacora';
 
 function Privado({ children }: { children: ReactElement }) {
@@ -78,6 +79,7 @@ export default function App() {
                     <Route path="/inventario/materiales" element={<Inventario tipo="materia" />} />
 
                     {/* Administración */}
+                    <Route path="/caja" element={<Caja />} />
                     <Route path="/reporte-dia" element={<ReporteDia />} />
                     <Route path="/bitacora" element={<Bitacora />} />
                     <Route path="/supervision" element={<Supervision />} />

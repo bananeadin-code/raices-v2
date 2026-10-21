@@ -75,6 +75,18 @@ export interface GarantiaDetalle {
   puntos: { id: number; texto: string; orden: number }[];
 }
 
+export interface CajaCategoria { id: number; nombre: string; activo: number; }
+export interface CajaMovimiento {
+  id: number;
+  tipo: 'entrada' | 'salida';
+  concepto: string;
+  monto: number;
+  fecha: string;
+  categoria_id?: number | null;
+  categoria?: string | null;
+  usuario?: string | null;
+}
+
 export interface VehiculoNota {
   id: number;
   tipo: 'reparacion' | 'gasto' | 'observacion';

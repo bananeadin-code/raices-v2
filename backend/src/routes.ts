@@ -17,6 +17,7 @@ import tareasRoutes from './modules/tareas/tareas.routes';
 import supervisionesRoutes from './modules/supervisiones/supervisiones.routes';
 import jefeRoutes from './modules/jefe/jefe.routes';
 import reportesRoutes from './modules/reportes/reportes.routes';
+import cajaRoutes from './modules/caja/caja.routes';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes';
 
 export const router = Router();
@@ -45,6 +46,9 @@ router.use('/jefe', jefeRoutes);
 
 // Reportes operativos (corte del día)
 router.use('/reportes', reportesRoutes);
+
+// Caja: entradas y salidas de dinero (bitácora de dinero)
+router.use('/caja', cajaRoutes);
 
 // Acceso
 router.use('/usuarios', usuariosRoutes);

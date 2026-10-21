@@ -46,6 +46,7 @@ const MENU: MenuGrupo[] = [
   {
     titulo: 'Administración',
     items: [
+      { to: '/caja', label: 'Caja', permiso: 'caja:ver', icon: 'cash' },
       { to: '/reporte-dia', label: 'Reporte del día', permiso: 'reportes:ver', icon: 'chart' },
       { to: '/roles', label: 'Roles y Permisos', permiso: 'roles:ver', icon: 'shield' },
       { to: '/bitacora', label: 'Bitácora', permiso: 'bitacora:ver', icon: 'file' },
