@@ -18,6 +18,7 @@ function direccionSucursal(v: VentaDetalle) {
 // Original (empresa) y Copia (cliente), en una sola impresión.
 function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string }) {
   const esCredito = venta.metodo_pago === 'credito';
+  const esCortesia = venta.metodo_pago === 'cortesia'; // nota a pura firma: sin precios ni total
   return (
     <div className="nota-copia">
       {/* Encabezado */}
@@ -47,48 +48,64 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
       </div>
 
       {/* Artículos */}
-      <table className="nota-tabla">
-        <thead>
-          <tr>
-            <th style={{ width: 44 }}>Cant.</th>
-            <th>Artículo</th>
-            <th style={{ width: 90, textAlign: 'right' }}>Precio</th>
-            <th style={{ width: 90, textAlign: 'right' }}>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {venta.items.map((it) => (
-            <tr key={it.id}>
-              <td>{Number(it.cantidad).toLocaleString('es-MX')}</td>
-              <td>{it.articulo}</td>
-              <td style={{ textAlign: 'right' }}>{money(it.precio_unitario)}</td>
-              <td style={{ textAlign: 'right' }}>{money(it.importe)}</td>
+      {esCortesia ? (
+        <table className="nota-tabla">
+          <thead><tr><th style={{ width: 60 }}>Cant.</th><th>Artículo</th></tr></thead>
+          <tbody>
+            {venta.items.map((it) => (
+              <tr key={it.id}>
+                <td>{Number(it.cantidad).toLocaleString('es-MX')}</td>
+                <td>{it.articulo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <table className="nota-tabla">
+          <thead>
+            <tr>
+              <th style={{ width: 44 }}>Cant.</th>
+              <th>Artículo</th>
+              <th style={{ width: 90, textAlign: 'right' }}>Precio</th>
+              <th style={{ width: 90, textAlign: 'right' }}>Total</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          {Number(venta.descuento) > 0 && (
-            <>
-              <tr><td colSpan={3} style={{ textAlign: 'right' }}>Subtotal</td><td style={{ textAlign: 'right' }}>{money(venta.subtotal)}</td></tr>
-              <tr><td colSpan={3} style={{ textAlign: 'right' }}>Descuento</td><td style={{ textAlign: 'right' }}>-{money(venta.descuento)}</td></tr>
-            </>
-          )}
-          <tr className="nota-total-row">
-            <td colSpan={3} style={{ textAlign: 'right' }}>Total</td>
-            <td style={{ textAlign: 'right' }}>{money(venta.total)}</td>
-          </tr>
-          {esCredito && (
-            <>
-              <tr><td colSpan={3} style={{ textAlign: 'right' }}>Pagado</td><td style={{ textAlign: 'right' }}>{money(venta.pagado)}</td></tr>
-              <tr className="nota-total-row"><td colSpan={3} style={{ textAlign: 'right' }}>Saldo</td><td style={{ textAlign: 'right' }}>{money(venta.saldo)}</td></tr>
-            </>
-          )}
-        </tfoot>
-      </table>
+          </thead>
+          <tbody>
+            {venta.items.map((it) => (
+              <tr key={it.id}>
+                <td>{Number(it.cantidad).toLocaleString('es-MX')}</td>
+                <td>{it.articulo}</td>
+                <td style={{ textAlign: 'right' }}>{money(it.precio_unitario)}</td>
+                <td style={{ textAlign: 'right' }}>{money(it.importe)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            {Number(venta.descuento) > 0 && (
+              <>
+                <tr><td colSpan={3} style={{ textAlign: 'right' }}>Subtotal</td><td style={{ textAlign: 'right' }}>{money(venta.subtotal)}</td></tr>
+                <tr><td colSpan={3} style={{ textAlign: 'right' }}>Descuento</td><td style={{ textAlign: 'right' }}>-{money(venta.descuento)}</td></tr>
+              </>
+            )}
+            <tr className="nota-total-row">
+              <td colSpan={3} style={{ textAlign: 'right' }}>Total</td>
+              <td style={{ textAlign: 'right' }}>{money(venta.total)}</td>
+            </tr>
+            {esCredito && (
+              <>
+                <tr><td colSpan={3} style={{ textAlign: 'right' }}>Pagado</td><td style={{ textAlign: 'right' }}>{money(venta.pagado)}</td></tr>
+                <tr className="nota-total-row"><td colSpan={3} style={{ textAlign: 'right' }}>Saldo</td><td style={{ textAlign: 'right' }}>{money(venta.saldo)}</td></tr>
+              </>
+            )}
+          </tfoot>
+        </table>
+      )}
 
       <div className="nota-pago">
-        Forma de pago: <strong>{venta.metodo_pago}</strong>
-        {esCredito && venta.fecha_vencimiento && <> · Vence: <strong>{fecha(venta.fecha_vencimiento)}</strong></>}
+        {esCortesia
+          ? <>Entrega de <strong>cortesía</strong> (sin costo)</>
+          : <>Forma de pago: <strong>{venta.metodo_pago}</strong>
+              {esCredito && venta.fecha_vencimiento && <> · Vence: <strong>{fecha(venta.fecha_vencimiento)}</strong></>}</>}
       </div>
 
       {/* Garantía / verificación de entrega */}
