@@ -327,6 +327,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .nota-recibo { font-weight: 700; font-size: 15px; }
 .nota-empresa { text-align: center; }
 .nota-empresa-nombre { font-weight: 800; font-size: 16px; letter-spacing: .3px; }
+/* Logo RaiDur recortado a su contenido (la imagen trae mucho margen blanco). */
+.marca-raidur { width: 120px; height: 44px; overflow: hidden; flex: none; }
+.marca-raidur img { width: 120px; display: block; margin-top: -64px; }
 .nota-empresa-dir { font-size: 11px; color: #444; }
 .nota-fecha { text-align: right; font-size: 12px; }
 .nota-cliente { border: 1px solid #999; border-top: none; padding: 5px 9px; }

@@ -34,6 +34,7 @@ export function ReportePrint<T>({
       <div className="reporte-hoja">
         <div className="reporte-head">
           <div>
+            <div className="marca-raidur" style={{ marginBottom: 4 }}><img src="/logo-raidur.jpeg" alt="RaiDur" /></div>
             <div className="reporte-empresa">Raíces Duranguenses</div>
             <div className="reporte-titulo">{titulo}</div>
           </div>

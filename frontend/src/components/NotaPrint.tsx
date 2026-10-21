@@ -24,6 +24,7 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
       <div className="nota-head">
         <div><div className="nota-recibo">Recibo # {venta.folio}</div></div>
         <div className="nota-empresa">
+          <div className="marca-raidur" style={{ margin: '0 auto 2px' }}><img src="/logo-raidur.jpeg" alt="RaiDur" /></div>
           <div className="nota-empresa-nombre">Raíces Duranguenses</div>
           <div className="nota-empresa-dir">{direccionSucursal(venta)}</div>
           {venta.sucursal_telefono && <div className="nota-empresa-dir">Tel. {venta.sucursal_telefono}</div>}

@@ -71,6 +71,7 @@ export function ReporteDia() {
         <div className="reporte-hoja" style={{ margin: '0 auto' }}>
           <div className="reporte-head">
             <div>
+              <div className="marca-raidur" style={{ marginBottom: 4 }}><img src="/logo-raidur.jpeg" alt="RaiDur" /></div>
               <div className="reporte-empresa">Raíces Duranguenses</div>
               <div className="reporte-titulo">Reporte general del día · {fechaLarga(r.fecha)}</div>
             </div>
