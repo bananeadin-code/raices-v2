@@ -172,9 +172,16 @@ export async function crear(data: VentaCreate, usuarioId: number) {
     if (!a.activo) throw new ApiError(422, `El artículo "${a.nombre}" está inactivo.`);
   }
 
-  const lineas = data.items.map((it) => ({ ...it, importe: r2(it.cantidad * it.precio_unitario) }));
+  // Cortesía = venta a pura firma, sin costo: se anulan precios e importes para que
+  // subtotal/total queden en 0 (coherente con la nota sin precios y con los reportes,
+  // que ya excluyen cortesía de los ingresos). El inventario se mueve por cantidad, no por precio.
+  const esCortesia = data.metodo_pago === 'cortesia';
+  const lineas = data.items.map((it) => {
+    const precio = esCortesia ? 0 : it.precio_unitario;
+    return { ...it, precio_unitario: precio, importe: r2(it.cantidad * precio) };
+  });
   const subtotal = r2(lineas.reduce((s, l) => s + l.importe, 0));
-  const descuento = r2(data.descuento);
+  const descuento = esCortesia ? 0 : r2(data.descuento);
   if (descuento > subtotal) throw new ApiError(422, 'El descuento no puede ser mayor al subtotal.');
   const total = r2(subtotal - descuento);
 
