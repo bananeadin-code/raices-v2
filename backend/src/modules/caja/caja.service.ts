@@ -5,19 +5,22 @@ import { paged, PageParams } from '../../utils/pagination';
 import { MovimientoCreate, CategoriaCreate } from './caja.schema';
 
 // ---------------- Catálogo de categorías ----------------
-export async function listarCategorias(p: PageParams) {
+export async function listarCategorias(p: PageParams, tipo?: string) {
+  const clauses = ['activo = 1'];
+  const whereParams: any[] = [];
+  if (tipo) { clauses.push('tipo = ?'); whereParams.push(tipo); }
   return paged({
-    select: 'id, nombre, activo', from: 'caja_categorias', where: 'activo = 1',
+    select: 'id, nombre, tipo, activo', from: 'caja_categorias', where: clauses.join(' AND '), whereParams,
     search: { col: 'nombre', q: p.q }, order: 'nombre', page: p.page, pageSize: p.pageSize,
   });
 }
 export async function crearCategoria(data: CategoriaCreate) {
-  const [res] = await pool.query('INSERT INTO caja_categorias (nombre) VALUES (?)', [data.nombre]);
-  return { id: (res as ResultSetHeader).insertId, nombre: data.nombre, activo: 1 };
+  const [res] = await pool.query('INSERT INTO caja_categorias (nombre, tipo) VALUES (?, ?)', [data.nombre, data.tipo]);
+  return { id: (res as ResultSetHeader).insertId, nombre: data.nombre, tipo: data.tipo, activo: 1 };
 }
 export async function actualizarCategoria(id: number, data: CategoriaCreate) {
-  await pool.query('UPDATE caja_categorias SET nombre = ? WHERE id = ?', [data.nombre, id]);
-  return { id, nombre: data.nombre };
+  await pool.query('UPDATE caja_categorias SET nombre = ?, tipo = ? WHERE id = ?', [data.nombre, data.tipo, id]);
+  return { id, nombre: data.nombre, tipo: data.tipo };
 }
 export async function eliminarCategoria(id: number) {
   await pool.query('UPDATE caja_categorias SET activo = 0 WHERE id = ?', [id]);
@@ -38,7 +41,7 @@ export async function listarMovimientos(p: PageParams, tipo?: string) {
   const salidas = Number(tot[0].salidas);
 
   const pg = await paged({
-    select: `m.id, m.tipo, m.concepto, m.monto, m.fecha, m.categoria_id,
+    select: `m.id, m.tipo, m.concepto, m.responsable, m.monto, m.fecha, m.categoria_id,
              COALESCE(c.nombre,'—') AS categoria, u.nombre AS usuario`,
     from: `caja_movimientos m LEFT JOIN caja_categorias c ON c.id = m.categoria_id
            LEFT JOIN usuarios u ON u.id = m.usuario_id`,
@@ -54,15 +57,16 @@ export async function crearMovimiento(data: MovimientoCreate, usuarioId: number)
     const c = await query<any>('SELECT id FROM caja_categorias WHERE id = ? AND activo = 1', [data.categoria_id]);
     if (!c[0]) throw new ApiError(404, 'Categoría no encontrada.');
   }
+  const resp = data.responsable ?? null;
   if (data.fecha) {
     const [res] = await pool.query(
-      'INSERT INTO caja_movimientos (tipo, categoria_id, concepto, monto, fecha, usuario_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [data.tipo, data.categoria_id ?? null, data.concepto, data.monto, data.fecha, usuarioId]);
+      'INSERT INTO caja_movimientos (tipo, categoria_id, concepto, responsable, monto, fecha, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [data.tipo, data.categoria_id ?? null, data.concepto, resp, data.monto, data.fecha, usuarioId]);
     return { id: (res as ResultSetHeader).insertId };
   }
   const [res] = await pool.query(
-    'INSERT INTO caja_movimientos (tipo, categoria_id, concepto, monto, usuario_id) VALUES (?, ?, ?, ?, ?)',
-    [data.tipo, data.categoria_id ?? null, data.concepto, data.monto, usuarioId]);
+    'INSERT INTO caja_movimientos (tipo, categoria_id, concepto, responsable, monto, usuario_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [data.tipo, data.categoria_id ?? null, data.concepto, resp, data.monto, usuarioId]);
   return { id: (res as ResultSetHeader).insertId };
 }
 

@@ -72,9 +72,11 @@ CREATE TABLE usuarios (
 -- 2) CATALOGOS
 -- ==========================================================
 CREATE TABLE categorias (
-  id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(100) NOT NULL,
-  activo TINYINT(1) NOT NULL DEFAULT 1
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre    VARCHAR(100) NOT NULL,
+  padre_id  INT UNSIGNED NULL,               -- NULL = categoría raíz; si no, subcategoría
+  activo    TINYINT(1) NOT NULL DEFAULT 1,
+  CONSTRAINT fk_categoria_padre FOREIGN KEY (padre_id) REFERENCES categorias(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE clientes (
@@ -136,7 +138,10 @@ CREATE TABLE materias (             -- materia prima / insumo
 CREATE TABLE vehiculos (
   id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
+  marca  VARCHAR(60)  NULL,
+  anio   SMALLINT UNSIGNED NULL,
   placas VARCHAR(20)  NULL,
+  serie  VARCHAR(40)  NULL,
   activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 

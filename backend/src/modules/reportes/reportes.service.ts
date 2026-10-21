@@ -52,6 +52,18 @@ export async function reporteDia(fecha: string) {
        FROM remisiones r JOIN sucursales s ON s.id=r.sucursal_id LEFT JOIN clientes c ON c.id=r.cliente_id
       WHERE DATE(r.fecha)=? ORDER BY r.id`, [fecha]);
 
+  // Caja: otras entradas y salidas de dinero del día, agrupadas por categoría.
+  const caja = await query<any>(
+    `SELECT m.tipo, COALESCE(c.nombre,'(sin categoría)') categoria, COUNT(*) n, IFNULL(SUM(m.monto),0) total
+       FROM caja_movimientos m LEFT JOIN caja_categorias c ON c.id=m.categoria_id
+      WHERE DATE(m.fecha)=? GROUP BY m.tipo, c.id ORDER BY m.tipo, total DESC`, [fecha]);
+  const cajaTot = await query<any>(
+    `SELECT IFNULL(SUM(CASE WHEN tipo='entrada' THEN monto END),0) entradas,
+            IFNULL(SUM(CASE WHEN tipo='salida'  THEN monto END),0) salidas
+       FROM caja_movimientos WHERE DATE(fecha)=?`, [fecha]);
+  const cajaEntradas = caja.filter((r) => r.tipo === 'entrada').map((r) => ({ categoria: r.categoria, n: num(r.n), total: num(r.total) }));
+  const cajaSalidas = caja.filter((r) => r.tipo === 'salida').map((r) => ({ categoria: r.categoria, n: num(r.n), total: num(r.total) }));
+
   return {
     fecha,
     resumen: {
@@ -61,6 +73,7 @@ export async function reporteDia(fecha: string) {
       produccionesTerminadas: producciones.filter((p) => p.estado === 'terminado').length,
       movimientosCount: movPorTipo.reduce((s, m) => s + num(m.n), 0),
       remisionesCount: remisiones.length,
+      cajaEntradas: num(cajaTot[0].entradas), cajaSalidas: num(cajaTot[0].salidas),
     },
     ventas: ventas.map((v) => ({ ...v, total: num(v.total) })),
     ventasPorMetodo: ventasPorMetodo.map((m) => ({ ...m, n: num(m.n), total: num(m.total) })),
@@ -70,5 +83,6 @@ export async function reporteDia(fecha: string) {
     movPorTipo: movPorTipo.map((m) => ({ ...m, n: num(m.n) })),
     movimientos: movimientos.map((m) => ({ ...m, cantidad: num(m.cantidad) })),
     remisiones: remisiones.map((r) => ({ ...r, renglones: num(r.renglones) })),
+    cajaEntradas, cajaSalidas,
   };
 }

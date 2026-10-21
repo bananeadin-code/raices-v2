@@ -6,7 +6,8 @@ import * as bitacora from '../bitacora/bitacora.service';
 
 // Categorías
 export async function listarCategorias(req: Request, res: Response) {
-  res.json(await service.listarCategorias(readPageParams(req.query)));
+  const tipo = req.query.tipo === 'entrada' || req.query.tipo === 'salida' ? req.query.tipo : undefined;
+  res.json(await service.listarCategorias(readPageParams(req.query), tipo));
 }
 export async function crearCategoria(req: Request, res: Response) {
   res.status(201).json(await service.crearCategoria(categoriaCreate.parse(req.body)));

@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 export const vehiculoCreate = z.object({
   nombre: z.string().trim().min(1).max(120),
+  marca: z.string().trim().max(60).nullish(),
+  anio: z.number().int().min(1900).max(2100).nullish(),
   placas: z.string().trim().max(20).nullish(),
+  serie: z.string().trim().max(40).nullish(),
 });
 export const vehiculoUpdate = vehiculoCreate.partial();
 

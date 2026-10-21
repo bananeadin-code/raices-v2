@@ -4,7 +4,7 @@ import { ApiError } from '../../utils/http';
 import { paged, PageParams } from '../../utils/pagination';
 import { VehiculoCreate, VehiculoUpdate, NotaCreate } from './vehiculos.schema';
 
-const CAMPOS = ['nombre', 'placas'] as const;
+const CAMPOS = ['nombre', 'marca', 'anio', 'placas', 'serie'] as const;
 
 export async function listar(p: PageParams) {
   return paged({ select: '*', from: 'vehiculos', where: 'activo = 1', search: { col: 'nombre', q: p.q }, order: 'nombre', page: p.page, pageSize: p.pageSize });
