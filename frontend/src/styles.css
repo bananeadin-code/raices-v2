@@ -336,6 +336,23 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .marca-raidur img { width: 120px; display: block; margin-top: -64px; }
 /* Pastilla blanca para mostrar el logo sobre fondos oscuros (panel del jefe) */
 .marca-chip { background: #fff; border-radius: 10px; padding: 5px 10px; display: inline-flex; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+
+/* Recibo de gasto (caja) imprimible */
+.recibo-gasto { background: #fff; color: #111; width: 100%; max-width: 640px; margin: 0 auto; padding: 18px 22px;
+  border: 1px solid #999; font-size: 13px; }
+.recibo-head { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 8px; }
+.recibo-empresa { flex: 1; }
+.recibo-empresa-nombre { font-weight: 800; font-size: 16px; }
+.recibo-doc { font-size: 12px; color: #444; text-transform: uppercase; letter-spacing: .08em; }
+.recibo-folio { font-size: 12px; color: #444; align-self: flex-start; }
+.recibo-tabla { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.recibo-tabla th { text-align: left; width: 120px; padding: 7px 8px; background: #f3f4f6; border: 1px solid #ccc; font-size: 12px; vertical-align: top; }
+.recibo-tabla td { padding: 7px 10px; border: 1px solid #ccc; }
+.recibo-monto { font-weight: 800; font-size: 16px; }
+.recibo-letra { margin-top: 10px; font-size: 12.5px; }
+.recibo-firmas { display: flex; gap: 18px; margin-top: 40px; }
+.recibo-firmas > div { flex: 1; text-align: center; font-size: 12px; }
+.recibo-firmas .linea { border-top: 1px solid #111; margin-bottom: 4px; }
 .nota-empresa-dir { font-size: 11px; color: #444; }
 .nota-fecha { text-align: right; font-size: 12px; }
 .nota-cliente { border: 1px solid #999; border-top: none; padding: 5px 9px; }

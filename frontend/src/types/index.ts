@@ -25,6 +25,8 @@ export interface Cliente {
 export interface Categoria {
   id: number;
   nombre: string;
+  padre_id?: number | null;
+  padre?: string | null; // nombre de la categoría padre (en el listado)
   activo: number;
 }
 
@@ -75,11 +77,12 @@ export interface GarantiaDetalle {
   puntos: { id: number; texto: string; orden: number }[];
 }
 
-export interface CajaCategoria { id: number; nombre: string; activo: number; }
+export interface CajaCategoria { id: number; nombre: string; tipo: 'entrada' | 'salida'; activo: number; }
 export interface CajaMovimiento {
   id: number;
   tipo: 'entrada' | 'salida';
   concepto: string;
+  responsable?: string | null;
   monto: number;
   fecha: string;
   categoria_id?: number | null;

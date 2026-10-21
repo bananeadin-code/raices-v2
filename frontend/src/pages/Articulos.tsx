@@ -120,7 +120,7 @@ export function Articulos() {
         </label>
         <label>Categoría
           <Combobox
-            opciones={categorias.map((c) => ({ value: c.id, label: c.nombre }))}
+            opciones={categorias.map((c) => ({ value: c.id, label: c.padre ? `${c.padre} › ${c.nombre}` : c.nombre }))}
             value={form.categoria_id ?? ''}
             onChange={(v) => setForm({ ...form, categoria_id: v === '' ? null : Number(v) })}
             vacioLabel="— Sin categoría —" placeholder="Selecciona categoría" />

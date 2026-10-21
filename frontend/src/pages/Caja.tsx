@@ -7,6 +7,7 @@ import { Combobox } from '../components/Combobox';
 import { SearchBar } from '../components/SearchBar';
 import { Pager } from '../components/Pager';
 import { BotonReporte, ColReporte } from '../components/ReportePrint';
+import { ReciboGasto } from '../components/ReciboGasto';
 import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
@@ -32,11 +33,13 @@ export function Caja() {
   const [totales, setTotales] = useState({ entradas: 0, salidas: 0, saldo: 0 });
   const [categorias, setCategorias] = useState<CajaCategoria[]>([]);
   const [modal, setModal] = useState(false);
-  const [mov, setMov] = useState<any>({ tipo: 'salida', categoria_id: '', concepto: '', monto: '', fecha: '' });
+  const [mov, setMov] = useState<any>({ tipo: 'salida', categoria_id: '', concepto: '', responsable: '', monto: '', fecha: '' });
   const [error, setError] = useState('');
+  const [recibo, setRecibo] = useState<CajaMovimiento | null>(null);
   // categorías
   const [modalCat, setModalCat] = useState(false);
   const [nuevaCat, setNuevaCat] = useState('');
+  const [nuevaCatTipo, setNuevaCatTipo] = useState<'entrada' | 'salida'>('salida');
 
   async function cargarTotales() {
     try { const r = await api.get<{ totales: any }>('/caja/movimientos?pageSize=1'); setTotales(r.totales); } catch { /* */ }
@@ -45,7 +48,8 @@ export function Caja() {
   useEffect(() => { cargarTotales(); cargarCategorias(); }, []); // eslint-disable-line
   useEffect(() => { cargarTotales(); }, [rows]); // eslint-disable-line
 
-  function nuevo() { setError(''); setMov({ tipo: 'salida', categoria_id: '', concepto: '', monto: '', fecha: '' }); setModal(true); }
+  function nuevo() { setError(''); setMov({ tipo: 'salida', categoria_id: '', concepto: '', responsable: '', monto: '', fecha: '' }); setModal(true); }
+  function cambiarTipo(tipo: string) { setMov({ ...mov, tipo, categoria_id: '' }); } // al cambiar tipo, limpia categoría
   async function guardar() {
     setError('');
     if (!mov.concepto.trim()) { setError('Escribe el concepto.'); return; }
@@ -54,7 +58,8 @@ export function Caja() {
       await api.post('/caja/movimientos', {
         tipo: mov.tipo,
         categoria_id: mov.categoria_id === '' ? null : Number(mov.categoria_id),
-        concepto: mov.concepto, monto: Number(mov.monto), fecha: mov.fecha || null,
+        concepto: mov.concepto, responsable: mov.responsable || null,
+        monto: Number(mov.monto), fecha: mov.fecha || null,
       });
       setModal(false); await reload(); toast.exito('Movimiento registrado');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error al guardar'); }
@@ -66,7 +71,7 @@ export function Caja() {
   }
   async function agregarCat() {
     if (!nuevaCat.trim()) return;
-    try { await api.post('/caja/categorias', { nombre: nuevaCat }); setNuevaCat(''); cargarCategorias(); toast.exito('Categoría agregada'); }
+    try { await api.post('/caja/categorias', { nombre: nuevaCat, tipo: nuevaCatTipo }); setNuevaCat(''); cargarCategorias(); toast.exito('Categoría agregada'); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo agregar'); }
   }
   async function quitarCat(c: CajaCategoria) {
@@ -79,10 +84,15 @@ export function Caja() {
     { header: 'Fecha', render: (m) => new Date(m.fecha).toLocaleDateString('es-MX') },
     { header: 'Tipo', render: (m) => <span className={`badge ${m.tipo === 'entrada' ? 'badge-ok' : 'badge-danger'}`}>{m.tipo === 'entrada' ? 'Entrada' : 'Salida'}</span> },
     { header: 'Categoría', render: (m) => m.categoria ?? '—' },
-    { header: 'Concepto', render: (m) => m.concepto },
+    { header: 'Concepto', render: (m) => <>{m.concepto}{m.responsable ? <span style={{ display: 'block', fontSize: 12, color: 'var(--ink-500)' }}>Resp.: {m.responsable}</span> : null}</> },
     { header: 'Registró', render: (m) => m.usuario ?? '' },
     { header: 'Monto', align: 'right', render: (m) => <strong style={{ color: m.tipo === 'entrada' ? 'var(--brand-700)' : 'var(--danger)' }}>{m.tipo === 'entrada' ? '' : '-'}{money(m.monto)}</strong> },
-    { header: '', render: (m) => (puede('caja:eliminar') ? <button className="btn-sm btn-danger" onClick={() => eliminar(m)}>Eliminar</button> : null) },
+    { header: '', render: (m) => (
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+          {m.tipo === 'salida' && <button className="btn-sm" onClick={() => setRecibo(m)}>Recibo</button>}
+          {puede('caja:eliminar') && <button className="btn-sm btn-danger" onClick={() => eliminar(m)}>Eliminar</button>}
+        </div>
+      ) },
   ];
 
   return (
@@ -123,7 +133,7 @@ export function Caja() {
       <Modal abierto={modal} titulo="Registrar movimiento" onCerrar={() => setModal(false)} onGuardar={guardar}>
         <div style={{ display: 'flex', gap: 10 }}>
           <label style={{ flex: 1 }}>Tipo
-            <select value={mov.tipo} onChange={(e) => setMov({ ...mov, tipo: e.target.value })}>
+            <select value={mov.tipo} onChange={(e) => cambiarTipo(e.target.value)}>
               <option value="salida">Salida (gasto)</option>
               <option value="entrada">Entrada (ingreso)</option>
             </select>
@@ -133,7 +143,7 @@ export function Caja() {
           </label>
         </div>
         <label>Categoría
-          <Combobox opciones={categorias.map((c) => ({ value: c.id, label: c.nombre }))}
+          <Combobox opciones={categorias.filter((c) => c.tipo === mov.tipo).map((c) => ({ value: c.id, label: c.nombre }))}
             value={mov.categoria_id} onChange={(v) => setMov({ ...mov, categoria_id: v })}
             vacioLabel="— Sin categoría —" placeholder="Selecciona categoría" />
         </label>
@@ -141,6 +151,12 @@ export function Caja() {
           <input value={mov.concepto} onChange={(e) => setMov({ ...mov, concepto: e.target.value })}
             placeholder="Pago de luz, compra de material, aportación..." />
         </label>
+        {mov.tipo === 'salida' && (
+          <label>Responsable (para el recibo)
+            <input value={mov.responsable} onChange={(e) => setMov({ ...mov, responsable: e.target.value })}
+              placeholder="Nombre de quien recibe / responsable del gasto" />
+          </label>
+        )}
         <label>Fecha (opcional)
           <input type="date" value={mov.fecha} onChange={(e) => setMov({ ...mov, fecha: e.target.value })} />
         </label>
@@ -148,20 +164,28 @@ export function Caja() {
       </Modal>
 
       <Modal abierto={modalCat} titulo="Categorías de caja" onCerrar={() => setModalCat(false)}>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <label style={{ width: 120 }}>Tipo
+            <select value={nuevaCatTipo} onChange={(e) => setNuevaCatTipo(e.target.value as 'entrada' | 'salida')}>
+              <option value="salida">Salida</option>
+              <option value="entrada">Entrada</option>
+            </select>
+          </label>
           <input style={{ flex: 1 }} value={nuevaCat} onChange={(e) => setNuevaCat(e.target.value)} placeholder="Nueva categoría" />
           <button className="btn-sm primario" onClick={agregarCat}>Agregar</button>
         </div>
-        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {categorias.map((c) => (
             <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14, padding: '4px 0', borderBottom: '1px solid var(--line)' }}>
-              <span>{c.nombre}</span>
+              <span>{c.nombre} <span className={`badge ${c.tipo === 'entrada' ? 'badge-ok' : 'badge-danger'}`} style={{ marginLeft: 6 }}>{c.tipo === 'entrada' ? 'Entrada' : 'Salida'}</span></span>
               {puede('caja:eliminar') && <button className="btn-sm btn-danger" onClick={() => quitarCat(c)}>Quitar</button>}
             </div>
           ))}
           {categorias.length === 0 && <p className="vacio">Sin categorías.</p>}
         </div>
       </Modal>
+
+      {recibo && <ReciboGasto mov={recibo} onClose={() => setRecibo(null)} />}
     </section>
   );
 }

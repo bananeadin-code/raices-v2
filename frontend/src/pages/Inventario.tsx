@@ -134,7 +134,7 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
             Categoría:
             <div style={{ width: 200 }}>
               <Combobox
-                opciones={categorias.map((c) => ({ value: c.id, label: c.nombre }))}
+                opciones={categorias.map((c) => ({ value: c.id, label: c.padre ? `${c.padre} › ${c.nombre}` : c.nombre }))}
                 value={filtroCat} onChange={setFiltroCat}
                 vacioLabel="Todas" placeholder="Todas" />
             </div>

@@ -10,12 +10,15 @@ import { usePagedList } from '../hooks/usePagedList';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
-interface Vehiculo { id: number; nombre: string; placas?: string | null; activo: number; }
+interface Vehiculo { id: number; nombre: string; marca?: string | null; anio?: number | null; placas?: string | null; serie?: string | null; activo: number; }
 const REPORTE: ColReporte<Vehiculo>[] = [
   { header: 'Vehículo', get: (v) => v.nombre },
+  { header: 'Marca', get: (v) => v.marca || '' },
+  { header: 'Año', get: (v) => (v.anio ? String(v.anio) : '') },
   { header: 'Placas', get: (v) => v.placas || '' },
+  { header: 'No. Serie', get: (v) => v.serie || '' },
 ];
-const VACIO: Partial<Vehiculo> = { nombre: '', placas: '' };
+const VACIO: Partial<Vehiculo> = { nombre: '', marca: '', anio: null, placas: '', serie: '' };
 
 const money = (n: number) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 const TIPO: Record<string, { label: string; cls: string }> = {
@@ -42,7 +45,13 @@ export function Vehiculos() {
   async function guardar() {
     setError('');
     if (!form.nombre?.trim()) { setError('El nombre es obligatorio.'); return; }
-    const payload = { nombre: form.nombre, placas: form.placas || null };
+    const payload = {
+      nombre: form.nombre,
+      marca: form.marca || null,
+      anio: form.anio ? Number(form.anio) : null,
+      placas: form.placas || null,
+      serie: form.serie || null,
+    };
     try {
       if (form.id) await api.put(`/vehiculos/${form.id}`, payload);
       else await api.post('/vehiculos', payload);
@@ -77,8 +86,10 @@ export function Vehiculos() {
   }
 
   const columns: Column<Vehiculo>[] = [
-    { header: 'Vehículo', render: (v) => v.nombre },
+    { header: 'Vehículo', render: (v) => <><strong>{v.nombre}</strong>{v.marca ? <span style={{ color: 'var(--ink-500)' }}> · {v.marca}</span> : null}</> },
+    { header: 'Año', render: (v) => v.anio || '—' },
     { header: 'Placas', render: (v) => v.placas || '—' },
+    { header: 'No. Serie', render: (v) => v.serie ? <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{v.serie}</span> : '—' },
     { header: 'Bitácora', render: (v) => <button className="btn-sm" onClick={() => abrirBitacora(v)}>Ver / agregar</button> },
   ];
 
@@ -103,11 +114,25 @@ export function Vehiculos() {
         onCerrar={() => setModal(false)} onGuardar={guardar}>
         <label>Nombre / descripción
           <input value={form.nombre ?? ''} onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-            placeholder="Camioneta Nissan, Camión de reparto..." />
+            placeholder="Frontier, Lobo F150, Camión de reparto..." />
         </label>
-        <label>Placas
-          <input value={form.placas ?? ''} onChange={(e) => setForm({ ...form, placas: e.target.value })} />
-        </label>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <label style={{ flex: 1 }}>Marca
+            <input value={form.marca ?? ''} onChange={(e) => setForm({ ...form, marca: e.target.value })}
+              placeholder="Nissan, Ford, Chevrolet..." />
+          </label>
+          <label style={{ width: 110 }}>Año
+            <input type="number" value={form.anio ?? ''} onChange={(e) => setForm({ ...form, anio: e.target.value === '' ? null : Number(e.target.value) })} />
+          </label>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <label style={{ width: 150 }}>Placas
+            <input value={form.placas ?? ''} onChange={(e) => setForm({ ...form, placas: e.target.value })} />
+          </label>
+          <label style={{ flex: 1 }}>No. Serie (VIN)
+            <input value={form.serie ?? ''} onChange={(e) => setForm({ ...form, serie: e.target.value })} />
+          </label>
+        </div>
         {error && <p className="error">{error}</p>}
       </Modal>
 

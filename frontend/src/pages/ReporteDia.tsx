@@ -88,7 +88,8 @@ export function ReporteDia() {
                     <td><strong>Cobrado (abonos)</strong></td><td style={{ textAlign: 'right' }}>{money(r.resumen.cobradoTotal)} · {r.resumen.cobradoCount} abono(s)</td></tr>
                 <tr><td><strong>Producciones</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.produccionesCount} ({r.resumen.produccionesTerminadas} terminadas)</td>
                     <td><strong>Movimientos de inventario</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.movimientosCount}</td></tr>
-                <tr><td><strong>Remisiones</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.remisionesCount}</td><td /><td /></tr>
+                <tr><td><strong>Remisiones</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.remisionesCount}</td>
+                    <td><strong>Caja (otras entradas / salidas)</strong></td><td style={{ textAlign: 'right' }}>{money(r.resumen.cajaEntradas)} / {money(r.resumen.cajaSalidas)}</td></tr>
               </tbody>
             </table>
           </Seccion>
@@ -167,6 +168,24 @@ export function ReporteDia() {
                 { h: 'Motivo', get: (x) => x.motivo || '' },
                 { h: 'Usuario', get: (x) => x.usuario || '' },
               ]} rows={r.movimientos} />
+          </Seccion>
+
+          {/* Caja: otras entradas y salidas de dinero */}
+          <Seccion titulo="Otras entradas (caja)">
+            <Tabla vacio="Sin entradas de caja en el día."
+              cols={[
+                { h: 'Categoría', get: (x) => x.categoria },
+                { h: 'Movimientos', align: 'right', get: (x) => x.n },
+                { h: 'Total', align: 'right', get: (x) => money(x.total) },
+              ]} rows={r.cajaEntradas} />
+          </Seccion>
+          <Seccion titulo="Salidas (caja)">
+            <Tabla vacio="Sin salidas de caja en el día."
+              cols={[
+                { h: 'Categoría', get: (x) => x.categoria },
+                { h: 'Movimientos', align: 'right', get: (x) => x.n },
+                { h: 'Total', align: 'right', get: (x) => money(x.total) },
+              ]} rows={r.cajaSalidas} />
           </Seccion>
 
           {/* Remisiones */}
