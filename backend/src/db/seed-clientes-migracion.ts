@@ -23,9 +23,10 @@ const CLIENTES: Cli[] = [
   { nombre: 'Mario Retana', telefono: null, ciudad: null, cp: '34000' },
   { nombre: 'Presidencia de Santa María', telefono: '649-112-24-18', ciudad: 'Santa María del Oro', cp: '34000' },
   { nombre: 'Municipio de Guadalupe Victoria', telefono: null, ciudad: 'Guadalupe Victoria', cp: '34000' },
-  // No estaban en el sistema viejo: se crean con el nombre de la lista; el negocio completa sus datos.
+  // No estaban en el sistema viejo: se crean SOLO con el nombre de la lista (sin datos
+  // inventados); el negocio completa teléfono/ciudad/etc. desde la pantalla de Clientes.
   { nombre: 'Alex Pan', telefono: null, ciudad: null, cp: null },
-  { nombre: 'Sara Cuencamé', telefono: null, ciudad: 'Cuencamé', cp: null },
+  { nombre: 'Sara Cuencamé', telefono: null, ciudad: null, cp: null },
 ];
 
 async function main() {
