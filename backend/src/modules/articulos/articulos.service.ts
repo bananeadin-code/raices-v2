@@ -6,11 +6,18 @@ import { paged, PageParams } from '../../utils/pagination';
 
 const CAMPOS = ['sku', 'nombre', 'categoria_id', 'precio', 'costo', 'es_producible', 'minimo', 'maximo', 'reorden', 'garantia_plantilla_id'] as const;
 
-export async function listar(p: PageParams) {
+export async function listar(p: PageParams, categoriaId?: number) {
+  const clauses = ['a.activo = 1'];
+  const whereParams: any[] = [];
+  // Filtro por categoría: si es una categoría padre, incluye también sus subcategorías.
+  if (categoriaId) {
+    clauses.push('(a.categoria_id = ? OR a.categoria_id IN (SELECT id FROM categorias WHERE padre_id = ?))');
+    whereParams.push(categoriaId, categoriaId);
+  }
   return paged({
     select: 'a.*, c.nombre AS categoria, g.nombre AS garantia',
     from: 'articulos a LEFT JOIN categorias c ON c.id = a.categoria_id LEFT JOIN garantia_plantillas g ON g.id = a.garantia_plantilla_id',
-    where: 'a.activo = 1', search: { col: 'a.nombre', q: p.q }, order: 'a.nombre',
+    where: clauses.join(' AND '), whereParams, search: { col: 'a.nombre', q: p.q }, order: 'a.nombre',
     page: p.page, pageSize: p.pageSize,
   });
 }

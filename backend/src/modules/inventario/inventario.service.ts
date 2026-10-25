@@ -86,7 +86,11 @@ export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParam
   const clauses = [isArt ? 'e.articulo_id IS NOT NULL' : 'e.materia_id IS NOT NULL'];
   const whereParams: any[] = [];
   if (sucursalId) { clauses.push('e.sucursal_id = ?'); whereParams.push(sucursalId); }
-  if (isArt && categoriaId) { clauses.push('a.categoria_id = ?'); whereParams.push(categoriaId); }
+  // Filtro por categoría: si es padre, incluye también sus subcategorías.
+  if (isArt && categoriaId) {
+    clauses.push('(a.categoria_id = ? OR a.categoria_id IN (SELECT id FROM categorias WHERE padre_id = ?))');
+    whereParams.push(categoriaId, categoriaId);
+  }
   return paged({
     select, from, where: clauses.join(' AND '), whereParams,
     search: { col: isArt ? 'a.nombre' : 'm.nombre', q: p.q },

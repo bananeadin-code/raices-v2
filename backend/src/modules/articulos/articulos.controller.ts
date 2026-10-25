@@ -4,7 +4,8 @@ import * as service from './articulos.service';
 import { articuloCreate, articuloUpdate, recetaSet } from './articulos.schema';
 
 export async function listar(req: Request, res: Response) {
-  res.json(await service.listar(readPageParams(req.query)));
+  const categoriaId = req.query.categoria_id ? Number(req.query.categoria_id) : undefined;
+  res.json(await service.listar(readPageParams(req.query), categoriaId));
 }
 export async function obtener(req: Request, res: Response) {
   res.json(await service.obtener(Number(req.params.id)));

@@ -27,7 +27,9 @@ interface RecetaRow { materia_id: number | ''; cantidad: number | ''; }
 export function Articulos() {
   const { puede } = useAuth();
   const toast = useToast();
-  const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Articulo>('/articulos');
+  const [filtroCat, setFiltroCat] = useState('');
+  const path = '/articulos' + (filtroCat ? `?categoria_id=${filtroCat}` : '');
+  const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Articulo>(path);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [garantias, setGarantias] = useState<GarantiaPlantilla[]>([]);
@@ -101,12 +103,21 @@ export function Articulos() {
       <div className="page-head">
         <h1>Artículos</h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <BotonReporte titulo="Reporte de Artículos" path="/articulos" columnas={REPORTE} />
+          <BotonReporte titulo="Reporte de Artículos" path={path} columnas={REPORTE} />
           {puede('articulos:crear') && <button className="primario" onClick={nuevo}>Agregar</button>}
         </div>
       </div>
       <div className="list-toolbar">
         <SearchBar onBuscar={buscar} placeholder="Buscar artículo..." />
+        <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+          Categoría:
+          <div style={{ width: 200 }}>
+            <Combobox
+              opciones={categorias.map((c) => ({ value: c.id, label: c.padre ? `${c.padre} › ${c.nombre}` : c.nombre }))}
+              value={filtroCat} onChange={setFiltroCat}
+              vacioLabel="Todas" placeholder="Todas" />
+          </div>
+        </label>
       </div>
       <DataTable columns={columns} rows={rows}
         onEdit={puede('articulos:editar') ? editar : undefined}
