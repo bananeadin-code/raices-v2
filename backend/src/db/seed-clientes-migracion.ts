@@ -17,12 +17,12 @@ type Cli = {
 
 // Datos reales de la 1a tanda de migración.
 const CLIENTES: Cli[] = [
-  { nombre: 'Jaime Soto', telefono: '674-101-58-45', ciudad: 'Santiago Papasquiaro', cp: '34000' },
+  { nombre: 'Jaime Soto', telefono: '674-101-58-45', ciudad: 'Santiago Papasquiaro', cp: null },
   { nombre: 'Jaime (El Salto)', telefono: '618-246-73-54', ciudad: 'El Salto', cp: null },
-  { nombre: 'Daniel Nevárez', telefono: '677-101-15-43', ciudad: 'Nuevo Ideal', cp: '34000' },
-  { nombre: 'Mario Retana', telefono: null, ciudad: null, cp: '34000' },
-  { nombre: 'Presidencia de Santa María', telefono: '649-112-24-18', ciudad: 'Santa María del Oro', cp: '34000' },
-  { nombre: 'Municipio de Guadalupe Victoria', telefono: null, ciudad: 'Guadalupe Victoria', cp: '34000' },
+  { nombre: 'Daniel Nevárez', telefono: '677-101-15-43', ciudad: 'Nuevo Ideal', cp: null },
+  { nombre: 'Mario Retana', telefono: null, ciudad: null, cp: null },
+  { nombre: 'Presidencia de Santa María', telefono: '649-112-24-18', ciudad: 'Santa María del Oro', cp: null },
+  { nombre: 'Municipio de Guadalupe Victoria', telefono: null, ciudad: 'Guadalupe Victoria', cp: null },
   // No estaban en el sistema viejo: se crean SOLO con el nombre de la lista (sin datos
   // inventados); el negocio completa teléfono/ciudad/etc. desde la pantalla de Clientes.
   { nombre: 'Alex Pan', telefono: null, ciudad: null, cp: null },
