@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { query } from '../../db/pool';
 import { env } from '../../config/env';
 import { ApiError } from '../../utils/http';
+import { assertNotLocked, recordFailure, recordSuccess } from './loginGuard';
 
 interface UsuarioRow {
   id: number;
@@ -14,6 +15,9 @@ interface UsuarioRow {
 }
 
 export async function login(usuario: string, password: string) {
+  // Anti fuerza bruta por cuenta: si está bloqueada, ni siquiera se consulta la BD.
+  assertNotLocked(usuario);
+
   const rows = await query<UsuarioRow>(
     `SELECT u.id, u.usuario, u.password_hash, u.activo, u.rol_id, r.nombre AS rol
        FROM usuarios u JOIN roles r ON r.id = u.rol_id
@@ -21,10 +25,12 @@ export async function login(usuario: string, password: string) {
     [usuario]
   );
   const u = rows[0];
-  if (!u || !u.activo) throw new ApiError(401, 'Usuario o contraseña incorrectos');
+  if (!u || !u.activo) { recordFailure(usuario); throw new ApiError(401, 'Usuario o contraseña incorrectos'); }
 
   const ok = await bcrypt.compare(password, u.password_hash);
-  if (!ok) throw new ApiError(401, 'Usuario o contraseña incorrectos');
+  if (!ok) { recordFailure(usuario); throw new ApiError(401, 'Usuario o contraseña incorrectos'); }
+
+  recordSuccess(usuario); // credenciales correctas: limpia el contador
 
   // Arma los permisos como 'modulo:accion' a partir de rol_permisos
   const permisosRows = await query<{
