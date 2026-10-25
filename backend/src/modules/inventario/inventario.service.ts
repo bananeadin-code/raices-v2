@@ -75,7 +75,7 @@ async function disponibleActual(cx: PoolConnection, itemTipo: string, itemId: nu
   return rows.length ? Number(rows[0].cantidad) - Number(rows[0].reservado) : 0;
 }
 
-export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParams, sucursalId?: number, categoriaId?: number) {
+export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParams, sucursalId?: number, categoriaId?: number, bajoMinimo?: boolean) {
   const isArt = itemTipo === 'articulo';
   const from = isArt
     ? 'existencias e JOIN sucursales s ON s.id = e.sucursal_id JOIN articulos a ON a.id = e.articulo_id LEFT JOIN categorias c ON c.id = a.categoria_id'
@@ -90,6 +90,11 @@ export async function existencias(itemTipo: 'articulo' | 'materia', p: PageParam
   if (isArt && categoriaId) {
     clauses.push('(a.categoria_id = ? OR a.categoria_id IN (SELECT id FROM categorias WHERE padre_id = ?))');
     whereParams.push(categoriaId, categoriaId);
+  }
+  // Solo lo que está por agotarse: disponible por debajo del mínimo (si tiene mínimo definido).
+  if (bajoMinimo) {
+    const minCol = isArt ? 'a.minimo' : 'm.minimo';
+    clauses.push(`(${minCol} IS NOT NULL AND ${minCol} > 0 AND (e.cantidad - e.reservado) < ${minCol})`);
   }
   return paged({
     select, from, where: clauses.join(' AND '), whereParams,

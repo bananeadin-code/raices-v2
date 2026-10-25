@@ -25,9 +25,11 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
   const toast = useToast();
   const [filtroSuc, setFiltroSuc] = useState('');
   const [filtroCat, setFiltroCat] = useState('');
+  const [soloBajo, setSoloBajo] = useState(false);
   const path = `/inventario/existencias?item_tipo=${tipo}`
     + (filtroSuc ? `&sucursal_id=${filtroSuc}` : '')
-    + (tipo === 'articulo' && filtroCat ? `&categoria_id=${filtroCat}` : '');
+    + (tipo === 'articulo' && filtroCat ? `&categoria_id=${filtroCat}` : '')
+    + (soloBajo ? '&bajo_minimo=1' : '');
   const { data: rows, total, page, setPage, buscar, pageSize, reload } = usePagedList<Existencia>(path);
 
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
@@ -148,6 +150,10 @@ export function Inventario({ tipo }: { tipo: 'articulo' | 'materia' }) {
               value={filtroSuc} onChange={(v) => setFiltroSuc(v)}
               vacioLabel="Todas" placeholder="Todas" />
           </div>
+        </label>
+        <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input type="checkbox" checked={soloBajo} onChange={(e) => setSoloBajo(e.target.checked)} style={{ width: 'auto' }} />
+          Solo bajo mínimo
         </label>
       </div>
 

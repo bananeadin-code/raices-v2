@@ -8,7 +8,8 @@ export async function existencias(req: Request, res: Response) {
   const itemTipo = req.query.item_tipo === 'materia' ? 'materia' : 'articulo';
   const sucursalId = req.query.sucursal_id ? Number(req.query.sucursal_id) : undefined;
   const categoriaId = req.query.categoria_id ? Number(req.query.categoria_id) : undefined;
-  res.json(await service.existencias(itemTipo, readPageParams(req.query), sucursalId, categoriaId));
+  const bajoMinimo = req.query.bajo_minimo === '1' || req.query.bajo_minimo === 'true';
+  res.json(await service.existencias(itemTipo, readPageParams(req.query), sucursalId, categoriaId, bajoMinimo));
 }
 
 export async function kardex(req: Request, res: Response) {
