@@ -35,6 +35,11 @@ interface Reporte {
   ventasPorMetodo: { metodo: string; monto: number; n: number }[];
   cobranza: { total: number; vencido: number; porVencer: number };
   deudores: { cliente: string; saldo: number; vencido: number; ventas: number }[];
+  caja: {
+    entradas: number; salidas: number; saldo: number;
+    entradasPorCat: { categoria: string; monto: number; n: number }[];
+    salidasPorCat: { categoria: string; monto: number; n: number }[];
+  };
   bajoMinimo: { articulo: string; sucursal: string; minimo: number; disponible: number }[];
   produccionPorEstado: { estado: string; n: number }[];
   ultimasVentas: { folio: number; cliente: string; importe: number; fecha: string; sucursal: string }[];
@@ -261,6 +266,35 @@ function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { us
                       {d.vencido > 0 ? money2(d.vencido) : '—'}
                     </td>
                   </tr>
+                ))}</tbody>
+              </table>
+            )}
+          </Seccion>
+
+          {/* Caja: dinero externo (entradas de programa, gastos) */}
+          <Seccion titulo="Caja · movimientos del mes" sub={money(rep.caja.saldo)}>
+            <div className="jefe-cobranza">
+              <div><span className="l">Entradas (programa, etc.)</span><span className="v" style={{ color: '#16a34a' }}>{money2(rep.caja.entradas)}</span></div>
+              <div><span className="l">Salidas (gastos / compras)</span><span className="v" style={{ color: '#ef4444' }}>{money2(rep.caja.salidas)}</span></div>
+              <div><span className="l">Saldo del mes</span><span className="v">{money2(rep.caja.saldo)}</span></div>
+            </div>
+
+            <div className="jefe-mini-title" style={{ marginTop: 14 }}>Entradas por categoría</div>
+            {rep.caja.entradasPorCat.length === 0 ? <p className="jefe-dim">Sin entradas este mes.</p> : (
+              <table className="jefe-tabla">
+                <thead><tr><th>Categoría</th><th style={{ textAlign: 'right' }}>Movs.</th><th style={{ textAlign: 'right' }}>Monto</th></tr></thead>
+                <tbody>{rep.caja.entradasPorCat.map((c, i) => (
+                  <tr key={i}><td>{c.categoria}</td><td style={{ textAlign: 'right' }}>{c.n}</td><td style={{ textAlign: 'right', fontWeight: 700 }}>{money2(c.monto)}</td></tr>
+                ))}</tbody>
+              </table>
+            )}
+
+            <div className="jefe-mini-title" style={{ marginTop: 14 }}>Salidas por categoría</div>
+            {rep.caja.salidasPorCat.length === 0 ? <p className="jefe-dim">Sin salidas este mes.</p> : (
+              <table className="jefe-tabla">
+                <thead><tr><th>Categoría</th><th style={{ textAlign: 'right' }}>Movs.</th><th style={{ textAlign: 'right' }}>Monto</th></tr></thead>
+                <tbody>{rep.caja.salidasPorCat.map((c, i) => (
+                  <tr key={i}><td>{c.categoria}</td><td style={{ textAlign: 'right' }}>{c.n}</td><td style={{ textAlign: 'right', fontWeight: 700 }}>{money2(c.monto)}</td></tr>
                 ))}</tbody>
               </table>
             )}

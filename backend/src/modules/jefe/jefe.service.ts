@@ -119,6 +119,25 @@ export async function reporteGeneral() {
       GROUP BY v.cliente_id, c.nombre
       ORDER BY saldo DESC LIMIT 50`);
   const deudores = deudoresRows.map((d) => ({ cliente: d.cliente, saldo: num(d.saldo), vencido: num(d.vencido), ventas: num(d.ventas) }));
+
+  // Caja (dinero externo del sistema): entradas de programa / gastos, etc. del mes.
+  const cajaResumen = await query<any>(
+    `SELECT IFNULL(SUM(CASE WHEN tipo='entrada' THEN monto END),0) entradas,
+            IFNULL(SUM(CASE WHEN tipo='salida'  THEN monto END),0) salidas
+       FROM caja_movimientos
+      WHERE YEAR(fecha)=YEAR(CURDATE()) AND MONTH(fecha)=MONTH(CURDATE())`);
+  const cajaPorCat = await query<any>(
+    `SELECT m.tipo, COALESCE(c.nombre,'(sin categoría)') categoria, IFNULL(SUM(m.monto),0) monto, COUNT(*) n
+       FROM caja_movimientos m LEFT JOIN caja_categorias c ON c.id=m.categoria_id
+      WHERE YEAR(m.fecha)=YEAR(CURDATE()) AND MONTH(m.fecha)=MONTH(CURDATE())
+      GROUP BY m.tipo, c.id ORDER BY m.tipo, monto DESC`);
+  const caja = {
+    entradas: num(cajaResumen[0].entradas),
+    salidas: num(cajaResumen[0].salidas),
+    saldo: num(cajaResumen[0].entradas) - num(cajaResumen[0].salidas),
+    entradasPorCat: cajaPorCat.filter((r) => r.tipo === 'entrada').map((r) => ({ categoria: r.categoria, monto: num(r.monto), n: num(r.n) })),
+    salidasPorCat: cajaPorCat.filter((r) => r.tipo === 'salida').map((r) => ({ categoria: r.categoria, monto: num(r.monto), n: num(r.n) })),
+  };
   const bajoMinimo = await query<any>(
     `SELECT a.nombre articulo, s.nombre sucursal, a.minimo, (e.cantidad - e.reservado) disponible
        FROM existencias e JOIN articulos a ON a.id=e.articulo_id JOIN sucursales s ON s.id=e.sucursal_id
@@ -184,6 +203,7 @@ export async function reporteGeneral() {
     ultimasVentas: ultimasVentas.map((r) => ({ folio: r.folio, cliente: r.cliente, importe: num(r.importe), fecha: r.fecha, sucursal: r.sucursal })),
     cobranza,
     deudores,
+    caja,
     bajoMinimo: bajoMinimo.map((r) => ({ ...r, minimo: num(r.minimo), disponible: num(r.disponible) })),
     produccionPorEstado: produccionPorEstado.map((r) => ({ estado: r.estado, n: num(r.n) })),
     produccionPorSucursal,
