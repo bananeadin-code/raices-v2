@@ -5,6 +5,10 @@ import { VentaDetalle } from '../types';
 const money = (n: number) =>
   Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 const fecha = (s?: string | null) => (s ? new Date(s).toLocaleDateString('es-MX') : '');
+const METODO_LABEL: Record<string, string> = {
+  efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito', cortesia: 'Firma',
+};
+const metodoLabel = (m: string) => METODO_LABEL[m] ?? m;
 
 function direccionCliente(v: VentaDetalle) {
   return [v.cliente_calle, v.cliente_numero, v.cliente_colonia, v.cliente_ciudad].filter(Boolean).join(' ');
@@ -103,8 +107,8 @@ function NotaCuerpo({ venta, etiqueta }: { venta: VentaDetalle; etiqueta: string
 
       <div className="nota-pago">
         {esCortesia
-          ? <>Entrega de <strong>cortesía</strong> (sin costo)</>
-          : <>Forma de pago: <strong>{venta.metodo_pago}</strong>
+          ? <>Nota por <strong>firma</strong> (sin costo)</>
+          : <>Forma de pago: <strong>{metodoLabel(venta.metodo_pago)}</strong>
               {esCredito && venta.fecha_vencimiento && <> · Vence: <strong>{fecha(venta.fecha_vencimiento)}</strong></>}</>}
       </div>
 

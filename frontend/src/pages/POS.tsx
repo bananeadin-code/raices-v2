@@ -22,13 +22,19 @@ const ESTADOS: Record<string, { label: string; cls: string }> = {
   entregada: { label: 'Entregada', cls: 'badge-ok' },
   cancelada: { label: 'Cancelada', cls: 'badge-danger' },
 };
+// Etiquetas visibles del método de pago. 'cortesia' se muestra como "Firma"
+// (el negocio pidió que no se vea como cortesía).
+const METODO_LABEL: Record<string, string> = {
+  efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito', cortesia: 'Firma',
+};
+const metodoLabel = (m: string) => METODO_LABEL[m] ?? m;
 
 const REPORTE: ColReporte<VentaRow>[] = [
   { header: 'Folio', align: 'right', get: (v) => v.folio },
   { header: 'Fecha', get: (v) => new Date(v.fecha).toLocaleDateString('es-MX') },
   { header: 'Cliente', get: (v) => v.cliente },
   { header: 'Sucursal', get: (v) => v.sucursal },
-  { header: 'Pago', get: (v) => v.metodo_pago },
+  { header: 'Pago', get: (v) => metodoLabel(v.metodo_pago) },
   { header: 'Estado', get: (v) => ESTADOS[v.estado]?.label ?? v.estado },
   { header: 'Total', align: 'right', get: (v) => money(v.total) },
   { header: 'Saldo', align: 'right', get: (v) => (v.metodo_pago === 'credito' && v.estado !== 'cancelada' ? money(v.saldo) : '—') },
@@ -141,7 +147,7 @@ export function POS() {
     { header: 'Fecha', render: (v) => new Date(v.fecha).toLocaleDateString('es-MX') },
     { header: 'Cliente', render: (v) => v.cliente },
     { header: 'Sucursal', render: (v) => v.sucursal },
-    { header: 'Pago', render: (v) => v.metodo_pago },
+    { header: 'Pago', render: (v) => metodoLabel(v.metodo_pago) },
     { header: 'Estado', render: (v) => { const e = ESTADOS[v.estado]; return <span className={`badge ${e.cls}`}>{e.label}</span>; } },
     { header: 'Total', align: 'right', render: (v) => money(v.total) },
     { header: 'Saldo', align: 'right', render: (v) => (v.metodo_pago === 'credito' && v.estado !== 'cancelada' ? money(v.saldo) : '—') },
@@ -240,7 +246,7 @@ export function POS() {
               <option value="tarjeta">Tarjeta</option>
               <option value="transferencia">Transferencia</option>
               <option value="credito">Crédito</option>
-              <option value="cortesia">Cortesía (sin pago, solo firma)</option>
+              <option value="cortesia">Firma (sin pago)</option>
             </select>
           </label>
           <label style={{ flex: 1 }}>Tipo

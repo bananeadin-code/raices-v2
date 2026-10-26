@@ -4,6 +4,10 @@ import { useToast } from '../components/Toast';
 
 const money = (n: number) => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+const METODO_LABEL: Record<string, string> = {
+  efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito', cortesia: 'Firma',
+};
+const metodoLabel = (m: string) => METODO_LABEL[m] ?? cap(m);
 const ESTADO_VENTA: Record<string, string> = { pendiente: 'Pendiente', entregada: 'Entregada', cancelada: 'Cancelada' };
 const ESTADO_PROD: Record<string, string> = { en_espera: 'En espera', en_progreso: 'En progreso', terminado: 'Terminado', cancelado: 'Cancelado' };
 const TIPO_MOV: Record<string, string> = {
@@ -90,6 +94,16 @@ export function ReporteDia() {
                     <td><strong>Movimientos de inventario</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.movimientosCount}</td></tr>
                 <tr><td><strong>Remisiones</strong></td><td style={{ textAlign: 'right' }}>{r.resumen.remisionesCount}</td>
                     <td><strong>Caja (otras entradas / salidas)</strong></td><td style={{ textAlign: 'right' }}>{money(r.resumen.cajaEntradas)} / {money(r.resumen.cajaSalidas)}</td></tr>
+                <tr style={{ borderTop: '2px solid #111' }}>
+                  <td><strong>Ingreso total del día</strong></td>
+                  <td colSpan={3} style={{ textAlign: 'right', fontSize: 17, fontWeight: 800 }}>{money(r.resumen.ingresoTotal)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} style={{ fontSize: 11, color: '#555' }}>
+                    = Ventas de contado {money(r.resumen.ventasContado)} + Cobrado (abonos) {money(r.resumen.cobradoTotal)} + Entradas de caja {money(r.resumen.cajaEntradas)}.
+                    &nbsp;Las ventas a crédito no cuentan como ingreso hasta cobrarse.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </Seccion>
@@ -98,7 +112,7 @@ export function ReporteDia() {
           <Seccion titulo="Ventas por método de pago">
             <Tabla vacio="Sin ventas en el día."
               cols={[
-                { h: 'Método', get: (x) => cap(x.metodo) },
+                { h: 'Método', get: (x) => metodoLabel(x.metodo) },
                 { h: 'Ventas', align: 'right', get: (x) => x.n },
                 { h: 'Total', align: 'right', get: (x) => money(x.total) },
               ]} rows={r.ventasPorMetodo} />
@@ -117,7 +131,7 @@ export function ReporteDia() {
                 { h: 'Folio', align: 'right', get: (x) => x.folio },
                 { h: 'Cliente', get: (x) => x.cliente },
                 { h: 'Sucursal', get: (x) => x.sucursal },
-                { h: 'Pago', get: (x) => cap(x.metodo) },
+                { h: 'Pago', get: (x) => metodoLabel(x.metodo) },
                 { h: 'Estado', get: (x) => ESTADO_VENTA[x.estado] ?? x.estado },
                 { h: 'Total', align: 'right', get: (x) => money(x.total) },
               ]} rows={r.ventas} />
@@ -129,7 +143,7 @@ export function ReporteDia() {
               cols={[
                 { h: 'Venta', align: 'right', get: (x) => `#${x.venta_folio}` },
                 { h: 'Cliente', get: (x) => x.cliente },
-                { h: 'Método', get: (x) => cap(x.metodo) },
+                { h: 'Método', get: (x) => metodoLabel(x.metodo) },
                 { h: 'Referencia', get: (x) => x.referencia || '' },
                 { h: 'Registró', get: (x) => x.usuario },
                 { h: 'Monto', align: 'right', get: (x) => money(x.monto) },

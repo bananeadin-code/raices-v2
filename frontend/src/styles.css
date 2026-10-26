@@ -250,7 +250,16 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .jefe-login button.jefe-tema-link { background: none; border: none; color: #64748b; font-size: 12px; font-weight: 500; cursor: pointer; padding: 4px; margin-top: 2px; text-decoration: underline; }
 .jefe-login button.jefe-tema-link:hover { background: none; color: #2563eb; }
 
+/* Selector de periodo (día / mes / año) del panel */
+.jefe-periodo { display: flex; gap: 6px; margin-bottom: 14px; }
+.jefe-periodo-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.jefe-periodo-btn:hover { color: #e2e8f0; }
+.jefe-periodo-btn.activo { background: #2563eb; color: #fff; border-color: #3b82f6; }
+
 /* ===== TEMA CLARO del Panel del Jefe (override; el oscuro queda igual) ===== */
+.jefe-claro .jefe-periodo-btn { background: #fff; color: #64748b; border-color: #cbd5e1; }
+.jefe-claro .jefe-periodo-btn:hover { color: #1e293b; }
+.jefe-claro .jefe-periodo-btn.activo { background: #2563eb; color: #fff; border-color: #2563eb; }
 .jefe-claro.jefe-bg { background: #eef2f6; }
 .jefe-claro.jefe-shell { background: #eef2f6; color: #1e293b; }
 .jefe-claro .jefe-login { background: #fff; border-color: #e2e8f0; box-shadow: 0 20px 50px rgba(15,23,42,.12); }

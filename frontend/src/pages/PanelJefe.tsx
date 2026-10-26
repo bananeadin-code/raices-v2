@@ -22,10 +22,12 @@ async function jefeApi<T>(path: string, options: RequestInit = {}): Promise<T> {
 const money = (n: number) => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
 const money2 = (n: number) => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
+type Periodo = 'dia' | 'mes' | 'anio';
 interface Reporte {
+  periodo: Periodo;
   resumen: {
     ventasHoy: { n: number; monto: number };
-    ventasMes: { n: number; monto: number };
+    ventasPeriodo: { n: number; monto: number };
     carteraPorCobrar: number; ventasPendientes: number; valorInventario: number;
     produccionActiva: number; clientesActivos: number; articulosBajoMinimo: number;
   };
@@ -42,7 +44,7 @@ interface Reporte {
   };
   bajoMinimo: { articulo: string; sucursal: string; minimo: number; disponible: number }[];
   produccionPorEstado: { estado: string; n: number }[];
-  ultimasVentas: { folio: number; cliente: string; importe: number; fecha: string; sucursal: string }[];
+  ultimasVentas: { folio: number; cliente: string; importe: number; fecha: string; sucursal: string; metodo: string; items: { articulo: string; cantidad: number }[] }[];
   tareasPendientes: { tema: string; responsable: string; fecha_limite?: string | null }[];
   produccionPorSucursal: {
     sucursal: string;
@@ -57,7 +59,9 @@ interface Matriz {
   filas: { item: string; celdas: Record<number, number>; total: number }[];
 }
 
-const METODO_LABEL: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito' };
+const METODO_LABEL: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito', cortesia: 'Firma' };
+const PERIODO_LABEL: Record<Periodo, string> = { dia: 'Día', mes: 'Mes', anio: 'Año' };
+const PERIODO_SUB: Record<Periodo, string> = { dia: 'de hoy', mes: 'del mes', anio: 'del año' };
 const ESTADO_PROD: Record<string, string> = { en_espera: 'En espera', en_progreso: 'En progreso', terminado: 'Terminado', cancelado: 'Cancelado' };
 
 const TEMA_KEY = 'jefe_tema';
@@ -128,10 +132,12 @@ function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { us
   const [rep, setRep] = useState<Reporte | null>(null);
   const [error, setError] = useState('');
   const [cambiar, setCambiar] = useState(false);
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
 
   useEffect(() => {
-    jefeApi<Reporte>('/reporte').then(setRep).catch((e) => setError(e instanceof Error ? e.message : 'Error'));
-  }, []);
+    setError('');
+    jefeApi<Reporte>(`/reporte?periodo=${periodo}`).then(setRep).catch((e) => setError(e instanceof Error ? e.message : 'Error'));
+  }, [periodo]);
 
   const maxDia = rep ? Math.max(1, ...rep.ventasPorDia.map((d) => d.monto)) : 1;
 
@@ -157,9 +163,18 @@ function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { us
 
       {rep && (
         <div className="jefe-body">
+          {/* Selector de periodo: día / mes / año */}
+          <div className="jefe-periodo">
+            {(['dia', 'mes', 'anio'] as Periodo[]).map((p) => (
+              <button key={p} className={`jefe-periodo-btn${periodo === p ? ' activo' : ''}`} onClick={() => setPeriodo(p)}>
+                {PERIODO_LABEL[p]}
+              </button>
+            ))}
+          </div>
+
           {/* Resumen rápido (KPIs) */}
           <div className="jefe-kpis">
-            <Kpi label="Ventas del mes" value={money(rep.resumen.ventasMes.monto)} sub={`${rep.resumen.ventasMes.n} ventas`} destacado />
+            <Kpi label={`Ventas ${PERIODO_SUB[periodo]}`} value={money(rep.resumen.ventasPeriodo.monto)} sub={`${rep.resumen.ventasPeriodo.n} ventas`} destacado />
             <Kpi label="Ventas de hoy" value={money(rep.resumen.ventasHoy.monto)} sub={`${rep.resumen.ventasHoy.n} ventas`} />
             <Kpi label="Por cobrar" value={money(rep.resumen.carteraPorCobrar)} sub="crédito con saldo" />
             <Kpi label="Valor inventario" value={money(rep.resumen.valorInventario)} sub="a costo" />
@@ -235,8 +250,17 @@ function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { us
               <Card titulo="Últimas ventas" ancho2>
                 {rep.ultimasVentas.length === 0 ? <Vacio /> : (
                   <table className="jefe-tabla">
-                    <thead><tr><th>Folio</th><th>Cliente</th><th>Sucursal</th><th>Importe</th></tr></thead>
-                    <tbody>{rep.ultimasVentas.map((v, i) => (<tr key={i}><td>#{v.folio}</td><td>{v.cliente}</td><td>{v.sucursal}</td><td>{money2(v.importe)}</td></tr>))}</tbody>
+                    <thead><tr><th>Folio</th><th>Cliente</th><th>Artículos</th><th>Pago</th><th>Sucursal</th><th style={{ textAlign: 'right' }}>Importe</th></tr></thead>
+                    <tbody>{rep.ultimasVentas.map((v, i) => (
+                      <tr key={i}>
+                        <td>#{v.folio}</td>
+                        <td>{v.cliente}</td>
+                        <td>{v.items.length === 0 ? '—' : v.items.map((it) => `${it.cantidad}× ${it.articulo}`).join(', ')}</td>
+                        <td>{METODO_LABEL[v.metodo] ?? v.metodo}</td>
+                        <td>{v.sucursal}</td>
+                        <td style={{ textAlign: 'right' }}>{money2(v.importe)}</td>
+                      </tr>
+                    ))}</tbody>
                   </table>
                 )}
               </Card>
@@ -272,11 +296,11 @@ function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { us
           </Seccion>
 
           {/* Caja: dinero externo (entradas de programa, gastos) */}
-          <Seccion titulo="Caja · movimientos del mes" sub={money(rep.caja.saldo)}>
+          <Seccion titulo={`Caja · movimientos ${PERIODO_SUB[periodo]}`} sub={money(rep.caja.saldo)}>
             <div className="jefe-cobranza">
               <div><span className="l">Entradas (programa, etc.)</span><span className="v" style={{ color: '#16a34a' }}>{money2(rep.caja.entradas)}</span></div>
               <div><span className="l">Salidas (gastos / compras)</span><span className="v" style={{ color: '#ef4444' }}>{money2(rep.caja.salidas)}</span></div>
-              <div><span className="l">Saldo del mes</span><span className="v">{money2(rep.caja.saldo)}</span></div>
+              <div><span className="l">Saldo {PERIODO_SUB[periodo]}</span><span className="v">{money2(rep.caja.saldo)}</span></div>
             </div>
 
             <div className="jefe-mini-title" style={{ marginTop: 14 }}>Entradas por categoría</div>
