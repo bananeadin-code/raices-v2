@@ -34,6 +34,7 @@ interface Reporte {
   ventasPorSucursal: { nombre: string; monto: number; n: number }[];
   ventasPorMetodo: { metodo: string; monto: number; n: number }[];
   cobranza: { total: number; vencido: number; porVencer: number };
+  deudores: { cliente: string; saldo: number; vencido: number; ventas: number }[];
   bajoMinimo: { articulo: string; sucursal: string; minimo: number; disponible: number }[];
   produccionPorEstado: { estado: string; n: number }[];
   ultimasVentas: { folio: number; cliente: string; importe: number; fecha: string; sucursal: string }[];
@@ -54,22 +55,43 @@ interface Matriz {
 const METODO_LABEL: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', credito: 'Crédito' };
 const ESTADO_PROD: Record<string, string> = { en_espera: 'En espera', en_progreso: 'En progreso', terminado: 'Terminado', cancelado: 'Cancelado' };
 
+const TEMA_KEY = 'jefe_tema';
+type Tema = 'claro' | 'oscuro';
+
 export function PanelJefe() {
   const [usuario, setUsuario] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [tema, setTema] = useState<Tema>(() => {
+    try { return (localStorage.getItem(TEMA_KEY) as Tema) || 'claro'; } catch { return 'claro'; }
+  });
+  function toggleTema() {
+    setTema((t) => { const n: Tema = t === 'claro' ? 'oscuro' : 'claro'; try { localStorage.setItem(TEMA_KEY, n); } catch { /* */ } return n; });
+  }
+  const claro = tema === 'claro' ? ' jefe-claro' : '';
 
   useEffect(() => {
     if (!localStorage.getItem(TKEY)) { setCargando(false); return; }
     jefeApi<{ usuario: string }>('/me').then((r) => setUsuario(r.usuario)).catch(() => {}).finally(() => setCargando(false));
   }, []);
 
-  if (cargando) return <div className="jefe-bg"><p style={{ color: '#cbd5e1' }}>Cargando…</p></div>;
-  if (!usuario) return <JefeLogin onEntrar={setUsuario} />;
-  return <JefeDashboard usuario={usuario} onUsuario={setUsuario} onSalir={() => { localStorage.removeItem(TKEY); setUsuario(null); }} />;
+  if (cargando) return <div className={`jefe-bg${claro}`}><p className="jefe-sub">Cargando…</p></div>;
+  if (!usuario) return <JefeLogin onEntrar={setUsuario} tema={tema} onToggleTema={toggleTema} />;
+  return <JefeDashboard usuario={usuario} tema={tema} onToggleTema={toggleTema}
+    onUsuario={setUsuario} onSalir={() => { localStorage.removeItem(TKEY); setUsuario(null); }} />;
+}
+
+// Botón para alternar el tema del panel (claro/oscuro).
+function TemaToggle({ tema, onToggle, className = 'jefe-btn' }: { tema: Tema; onToggle: () => void; className?: string }) {
+  return (
+    <button type="button" className={className} onClick={onToggle}
+      title={`Cambiar a modo ${tema === 'claro' ? 'oscuro' : 'claro'}`}>
+      {tema === 'claro' ? 'Modo oscuro' : 'Modo claro'}
+    </button>
+  );
 }
 
 // ------------------------------- Login -------------------------------
-function JefeLogin({ onEntrar }: { onEntrar: (u: string) => void }) {
+function JefeLogin({ onEntrar, tema, onToggleTema }: { onEntrar: (u: string) => void; tema: Tema; onToggleTema: () => void }) {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -81,23 +103,23 @@ function JefeLogin({ onEntrar }: { onEntrar: (u: string) => void }) {
     } catch (err) { setError(err instanceof Error ? err.message : 'Error al entrar'); }
   }
   return (
-    <div className="jefe-bg">
+    <div className={`jefe-bg${tema === 'claro' ? ' jefe-claro' : ''}`}>
       <form className="jefe-login" onSubmit={submit}>
         <div className="marca-chip" style={{ margin: '0 auto 8px' }}><div className="marca-raidur"><img src="/logo-raidur.jpeg" alt="RaiDur" /></div></div>
         <div className="jefe-eyebrow">Reportes</div>
-        <h1>Panel del Jefe</h1>
-        <p className="jefe-sub">Acceso restringido · Raíces Duranguenses</p>
+        <p className="jefe-sub" style={{ marginTop: 6 }}>Acceso restringido · Raíces Duranguenses</p>
         <input placeholder="Usuario" value={usuario} onChange={(e) => setUsuario(e.target.value)} autoFocus />
         <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && <p className="jefe-error">{error}</p>}
         <button type="submit">Entrar</button>
+        <TemaToggle tema={tema} onToggle={onToggleTema} className="jefe-tema-link" />
       </form>
     </div>
   );
 }
 
 // ------------------------------ Dashboard ------------------------------
-function JefeDashboard({ usuario, onUsuario, onSalir }: { usuario: string; onUsuario: (u: string) => void; onSalir: () => void }) {
+function JefeDashboard({ usuario, onUsuario, onSalir, tema, onToggleTema }: { usuario: string; onUsuario: (u: string) => void; onSalir: () => void; tema: Tema; onToggleTema: () => void }) {
   const [rep, setRep] = useState<Reporte | null>(null);
   const [error, setError] = useState('');
   const [cambiar, setCambiar] = useState(false);
@@ -109,16 +131,17 @@ function JefeDashboard({ usuario, onUsuario, onSalir }: { usuario: string; onUsu
   const maxDia = rep ? Math.max(1, ...rep.ventasPorDia.map((d) => d.monto)) : 1;
 
   return (
-    <div className="jefe-shell">
+    <div className={`jefe-shell${tema === 'claro' ? ' jefe-claro' : ''}`}>
       <header className="jefe-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="marca-chip"><div className="marca-raidur"><img src="/logo-raidur.jpeg" alt="RaiDur" /></div></div>
           <div>
-            <div className="jefe-title">Panel del Jefe</div>
+            <div className="jefe-title">Reportes</div>
             <div className="jefe-usuario">Raíces Duranguenses · {usuario}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <TemaToggle tema={tema} onToggle={onToggleTema} />
           <button className="jefe-btn" onClick={() => setCambiar(true)}>Cambiar acceso</button>
           <button className="jefe-btn" onClick={onSalir}>Salir</button>
         </div>
@@ -222,6 +245,25 @@ function JefeDashboard({ usuario, onUsuario, onSalir }: { usuario: string; onUsu
               <div><span className="l">Vencido</span><span className="v" style={{ color: '#f87171' }}>{money2(rep.cobranza.vencido)}</span></div>
               <div><span className="l">Por vencer</span><span className="v">{money2(rep.cobranza.porVencer)}</span></div>
             </div>
+
+            {/* Quién debe */}
+            <div className="jefe-mini-title" style={{ marginTop: 14 }}>Quién debe</div>
+            {rep.deudores.length === 0 ? (
+              <p className="jefe-ok">Nadie tiene saldo pendiente.</p>
+            ) : (
+              <table className="jefe-tabla">
+                <thead><tr><th>Cliente</th><th style={{ textAlign: 'right' }}>Saldo</th><th style={{ textAlign: 'right' }}>Vencido</th></tr></thead>
+                <tbody>{rep.deudores.map((d, i) => (
+                  <tr key={i}>
+                    <td>{d.cliente}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>{money2(d.saldo)}</td>
+                    <td style={{ textAlign: 'right', color: d.vencido > 0 ? '#ef4444' : 'inherit', fontWeight: d.vencido > 0 ? 700 : 400 }}>
+                      {d.vencido > 0 ? money2(d.vencido) : '—'}
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
           </Seccion>
 
           {/* Tareas pendientes */}

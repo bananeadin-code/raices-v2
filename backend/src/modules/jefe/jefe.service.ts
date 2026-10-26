@@ -63,10 +63,25 @@ async function resumen() {
 }
 
 export async function reporteGeneral() {
-  const ventasPorDia = await query<any>(
+  const ventasPorDiaRaw = await query<any>(
     `SELECT DATE(fecha) dia, IFNULL(SUM(total),0) monto, COUNT(*) n
        FROM ventas WHERE estado<>'cancelada' AND metodo_pago<>'cortesia' AND fecha >= (CURDATE() - INTERVAL 29 DAY)
       GROUP BY DATE(fecha) ORDER BY dia`);
+  // Serie continua de los últimos 30 días (los días sin ventas van en 0) para que la
+  // gráfica de barras siempre muestre 30 columnas y no una sola barra gigante.
+  const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const porDia = new Map<string, { monto: number; n: number }>();
+  for (const r of ventasPorDiaRaw) {
+    const k = r.dia instanceof Date ? ymd(r.dia) : String(r.dia).slice(0, 10);
+    porDia.set(k, { monto: num(r.monto), n: num(r.n) });
+  }
+  const ventasPorDia: { dia: string; monto: number; n: number }[] = [];
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(hoy); d.setDate(d.getDate() - i);
+    const k = ymd(d); const v = porDia.get(k);
+    ventasPorDia.push({ dia: k, monto: v ? v.monto : 0, n: v ? v.n : 0 });
+  }
   const topArticulos = await query<any>(
     `SELECT a.nombre, IFNULL(SUM(vi.cantidad),0) unidades, IFNULL(SUM(vi.importe),0) monto
        FROM venta_items vi JOIN ventas v ON v.id=vi.venta_id JOIN articulos a ON a.id=vi.articulo_id
@@ -90,6 +105,20 @@ export async function reporteGeneral() {
     vencido: num(cobranzaRows[0].vencido),
     porVencer: num(cobranzaRows[0].total) - num(cobranzaRows[0].vencido),
   };
+  // Quién debe: clientes con saldo de crédito pendiente (mayor saldo primero).
+  const deudoresRows = await query<any>(
+    `SELECT COALESCE(c.nombre,'Público en general') cliente,
+            IFNULL(SUM(v.total - IFNULL(a.pagado,0)),0) saldo,
+            IFNULL(SUM(CASE WHEN v.fecha_vencimiento IS NOT NULL AND v.fecha_vencimiento < CURDATE()
+                            THEN v.total - IFNULL(a.pagado,0) ELSE 0 END),0) vencido,
+            COUNT(*) ventas
+       FROM ventas v
+       LEFT JOIN clientes c ON c.id=v.cliente_id
+       LEFT JOIN (SELECT venta_id, SUM(monto) pagado FROM abonos GROUP BY venta_id) a ON a.venta_id=v.id
+      WHERE v.metodo_pago='credito' AND v.estado<>'cancelada' AND (v.total - IFNULL(a.pagado,0)) > 0.009
+      GROUP BY v.cliente_id, c.nombre
+      ORDER BY saldo DESC LIMIT 50`);
+  const deudores = deudoresRows.map((d) => ({ cliente: d.cliente, saldo: num(d.saldo), vencido: num(d.vencido), ventas: num(d.ventas) }));
   const bajoMinimo = await query<any>(
     `SELECT a.nombre articulo, s.nombre sucursal, a.minimo, (e.cantidad - e.reservado) disponible
        FROM existencias e JOIN articulos a ON a.id=e.articulo_id JOIN sucursales s ON s.id=e.sucursal_id
@@ -148,12 +177,13 @@ export async function reporteGeneral() {
 
   return {
     resumen: await resumen(),
-    ventasPorDia: ventasPorDia.map((r) => ({ dia: r.dia, monto: num(r.monto), n: num(r.n) })),
+    ventasPorDia,
     topArticulos: topArticulos.map((r) => ({ nombre: r.nombre, unidades: num(r.unidades), monto: num(r.monto) })),
     ventasPorSucursal: ventasPorSucursal.map((r) => ({ nombre: r.nombre, monto: num(r.monto), n: num(r.n) })),
     ventasPorMetodo: ventasPorMetodo.map((r) => ({ metodo: r.metodo, monto: num(r.monto), n: num(r.n) })),
     ultimasVentas: ultimasVentas.map((r) => ({ folio: r.folio, cliente: r.cliente, importe: num(r.importe), fecha: r.fecha, sucursal: r.sucursal })),
     cobranza,
+    deudores,
     bajoMinimo: bajoMinimo.map((r) => ({ ...r, minimo: num(r.minimo), disponible: num(r.disponible) })),
     produccionPorEstado: produccionPorEstado.map((r) => ({ estado: r.estado, n: num(r.n) })),
     produccionPorSucursal,
