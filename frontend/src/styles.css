@@ -246,6 +246,56 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .jefe-modal-overlay .jefe-modal input { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 8px; padding: 9px 11px; font-size: 14px; }
 .jefe-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
+/* Enlace de cambio de tema dentro del login (discreto; vence a .jefe-login button) */
+.jefe-login button.jefe-tema-link { background: none; border: none; color: #64748b; font-size: 12px; font-weight: 500; cursor: pointer; padding: 4px; margin-top: 2px; text-decoration: underline; }
+.jefe-login button.jefe-tema-link:hover { background: none; color: #2563eb; }
+
+/* ===== TEMA CLARO del Panel del Jefe (override; el oscuro queda igual) ===== */
+.jefe-claro.jefe-bg { background: #eef2f6; }
+.jefe-claro.jefe-shell { background: #eef2f6; color: #1e293b; }
+.jefe-claro .jefe-login { background: #fff; border-color: #e2e8f0; box-shadow: 0 20px 50px rgba(15,23,42,.12); }
+.jefe-claro .jefe-login h1 { color: #0f172a; }
+.jefe-claro .jefe-sub { color: #64748b; }
+.jefe-claro .jefe-login input { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+.jefe-claro .jefe-login input::placeholder { color: #94a3b8; }
+.jefe-claro .jefe-header { background: #fff; border-bottom-color: #e2e8f0; }
+.jefe-claro .jefe-title { color: #0f172a; }
+.jefe-claro .jefe-usuario { color: #64748b; }
+.jefe-claro .jefe-btn { background: #fff; color: #334155; border-color: #cbd5e1; }
+.jefe-claro .jefe-btn:hover { background: #f1f5f9; }
+.jefe-claro .jefe-kpi { background: #fff; border-color: #e2e8f0; }
+.jefe-claro .jefe-kpi-label { color: #64748b; }
+.jefe-claro .jefe-kpi-value { color: #0f172a; }
+.jefe-claro .jefe-kpi-sub { color: #94a3b8; }
+.jefe-claro .jefe-card { background: #fff; border-color: #e2e8f0; }
+.jefe-claro .jefe-card-title { color: #0f172a; }
+.jefe-claro .jefe-bars-cap { color: #64748b; }
+.jefe-claro .jefe-barlist-label { color: #475569; }
+.jefe-claro .jefe-barlist-track { background: #e2e8f0; }
+.jefe-claro .jefe-barlist-value { color: #0f172a; }
+.jefe-claro .jefe-cobranza > div { border-bottom-color: #e2e8f0; }
+.jefe-claro .jefe-cobranza .l { color: #64748b; }
+.jefe-claro .jefe-cobranza .v { color: #0f172a; }
+.jefe-claro .jefe-tabla th { color: #64748b; border-bottom-color: #e2e8f0; }
+.jefe-claro .jefe-tabla td { color: #334155; border-bottom-color: #eef2f6; }
+.jefe-claro .jefe-sec { background: #fff; border-color: #e2e8f0; }
+.jefe-claro .jefe-sec-head { color: #0f172a; }
+.jefe-claro .jefe-sec-head:hover { background: #f1f5f9; }
+.jefe-claro .jefe-caret { color: #94a3b8; }
+.jefe-claro .jefe-suc { background: #f8fafc; border-color: #e2e8f0; }
+.jefe-claro .jefe-suc-nombre { color: #0f172a; border-bottom-color: #e2e8f0; }
+.jefe-claro .jefe-mini-title { color: #64748b; }
+.jefe-claro .jefe-line { color: #475569; }
+.jefe-claro .jefe-line-num { color: #0f172a; }
+.jefe-claro .jefe-dim { color: #94a3b8; }
+.jefe-claro .jefe-tag { background: #dbeafe; color: #1d4ed8; }
+.jefe-claro .jefe-tag.warn { background: #fef3c7; color: #b45309; }
+.jefe-claro .jefe-matriz td:first-child, .jefe-claro .jefe-matriz th:first-child { background: #fff; }
+.jefe-claro .jefe-modal { background: #fff; border-color: #e2e8f0; }
+.jefe-claro .jefe-modal h3 { color: #0f172a; }
+.jefe-claro .jefe-modal label { color: #475569; }
+.jefe-claro .jefe-modal-overlay .jefe-modal input, .jefe-claro .jefe-modal input { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+
 /* Tarjetas de resumen (stats) */
 .stat-tiles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .stat-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
@@ -321,6 +371,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .nota-actions { display: flex; gap: 8px; margin-bottom: 14px; }
 /* Hoja completa: dos ejemplares (Original + Copia) a media hoja cada uno. */
 .nota-doble { background: #fff; color: #111; width: 720px; max-width: 100%; box-shadow: var(--sh-lg); border-radius: 6px; }
+/* Hoja de remisión (nota de entrega) — misma hoja blanca que el POS. */
+.nota-print { background: #fff; color: #111; width: 720px; max-width: 100%; box-shadow: var(--sh-lg); border-radius: 6px; padding: 14px 24px; font-size: 12px; line-height: 1.4; }
 .nota-copia { position: relative; padding: 10px 22px; font-size: 12px; line-height: 1.3; }
 .nota-copia-tag { display: block; width: fit-content; margin: 0 0 2px auto; font-size: 9px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: #666; border: 1px solid #bbb; border-radius: 3px; padding: 0 5px; }
@@ -385,10 +437,10 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 @media print {
   body { background: #fff !important; }
   body * { visibility: hidden !important; }
-  .nota-doble, .nota-doble * { visibility: visible !important; }
+  .nota-doble, .nota-doble *, .nota-print, .nota-print * { visibility: visible !important; }
   .nota-overlay { position: absolute; inset: 0; background: #fff; padding: 0; overflow: visible; }
   .nota-actions { display: none !important; }
-  .nota-doble { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border-radius: 0; }
+  .nota-doble, .nota-print { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border-radius: 0; }
   .nota-copia { break-inside: avoid; }          /* no partir un ejemplar entre hojas */
   .nota-corte { margin: 4mm 0; }
   .nota-tabla thead th, .nota-total-row td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
