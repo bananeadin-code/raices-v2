@@ -31,11 +31,19 @@ export async function cambiarCredenciales(passwordActual: string, nuevoUsuario?:
 // ---------------- Reportes (resumen general del sistema) ----------------
 const num = (v: any) => Number(v ?? 0);
 
-async function resumen() {
+export type Periodo = 'dia' | 'mes' | 'anio';
+// Fragmento WHERE para acotar una columna de fecha al periodo elegido.
+function condPeriodo(col: string, periodo: Periodo): string {
+  if (periodo === 'dia') return `DATE(${col}) = CURDATE()`;
+  if (periodo === 'anio') return `YEAR(${col}) = YEAR(CURDATE())`;
+  return `YEAR(${col}) = YEAR(CURDATE()) AND MONTH(${col}) = MONTH(CURDATE())`;
+}
+
+async function resumen(periodo: Periodo) {
   const hoy = await query<any>(
     "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND metodo_pago <> 'cortesia' AND DATE(fecha) = CURDATE()");
-  const mes = await query<any>(
-    "SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND metodo_pago <> 'cortesia' AND YEAR(fecha)=YEAR(CURDATE()) AND MONTH(fecha)=MONTH(CURDATE())");
+  const per = await query<any>(
+    `SELECT COUNT(*) n, IFNULL(SUM(total),0) monto FROM ventas WHERE estado <> 'cancelada' AND metodo_pago <> 'cortesia' AND ${condPeriodo('fecha', periodo)}`);
   const cartera = await query<any>(
     `SELECT IFNULL(SUM(v.total - IFNULL(a.pagado,0)),0) saldo
        FROM ventas v LEFT JOIN (SELECT venta_id, SUM(monto) pagado FROM abonos GROUP BY venta_id) a ON a.venta_id=v.id
@@ -52,7 +60,7 @@ async function resumen() {
       WHERE e.articulo_id IS NOT NULL AND a.minimo IS NOT NULL AND a.minimo > 0 AND (e.cantidad - e.reservado) < a.minimo`);
   return {
     ventasHoy: { n: num(hoy[0].n), monto: num(hoy[0].monto) },
-    ventasMes: { n: num(mes[0].n), monto: num(mes[0].monto) },
+    ventasPeriodo: { n: num(per[0].n), monto: num(per[0].monto) },
     carteraPorCobrar: num(cartera[0].saldo),
     ventasPendientes: num(pendientes[0].n),
     valorInventario: num(invArt[0].v) + num(invMat[0].v),
@@ -62,7 +70,7 @@ async function resumen() {
   };
 }
 
-export async function reporteGeneral() {
+export async function reporteGeneral(periodo: Periodo = 'mes') {
   const ventasPorDiaRaw = await query<any>(
     `SELECT DATE(fecha) dia, IFNULL(SUM(total),0) monto, COUNT(*) n
        FROM ventas WHERE estado<>'cancelada' AND metodo_pago<>'cortesia' AND fecha >= (CURDATE() - INTERVAL 29 DAY)
@@ -85,14 +93,14 @@ export async function reporteGeneral() {
   const topArticulos = await query<any>(
     `SELECT a.nombre, IFNULL(SUM(vi.cantidad),0) unidades, IFNULL(SUM(vi.importe),0) monto
        FROM venta_items vi JOIN ventas v ON v.id=vi.venta_id JOIN articulos a ON a.id=vi.articulo_id
-      WHERE v.estado<>'cancelada' GROUP BY a.id ORDER BY monto DESC LIMIT 10`);
+      WHERE v.estado<>'cancelada' AND ${condPeriodo('v.fecha', periodo)} GROUP BY a.id ORDER BY monto DESC LIMIT 10`);
   const ventasPorSucursal = await query<any>(
     `SELECT s.nombre, IFNULL(SUM(v.total),0) monto, COUNT(*) n
        FROM ventas v JOIN sucursales s ON s.id=v.sucursal_id
-      WHERE v.estado<>'cancelada' AND v.metodo_pago<>'cortesia' GROUP BY s.id ORDER BY monto DESC`);
+      WHERE v.estado<>'cancelada' AND v.metodo_pago<>'cortesia' AND ${condPeriodo('v.fecha', periodo)} GROUP BY s.id ORDER BY monto DESC`);
   const ventasPorMetodo = await query<any>(
     `SELECT metodo_pago metodo, IFNULL(SUM(total),0) monto, COUNT(*) n
-       FROM ventas WHERE estado<>'cancelada' GROUP BY metodo_pago ORDER BY monto DESC`);
+       FROM ventas WHERE estado<>'cancelada' AND ${condPeriodo('fecha', periodo)} GROUP BY metodo_pago ORDER BY monto DESC`);
   const cobranzaRows = await query<any>(
     `SELECT
         IFNULL(SUM(v.total - IFNULL(a.pagado,0)),0) total,
@@ -124,12 +132,11 @@ export async function reporteGeneral() {
   const cajaResumen = await query<any>(
     `SELECT IFNULL(SUM(CASE WHEN tipo='entrada' THEN monto END),0) entradas,
             IFNULL(SUM(CASE WHEN tipo='salida'  THEN monto END),0) salidas
-       FROM caja_movimientos
-      WHERE YEAR(fecha)=YEAR(CURDATE()) AND MONTH(fecha)=MONTH(CURDATE())`);
+       FROM caja_movimientos WHERE ${condPeriodo('fecha', periodo)}`);
   const cajaPorCat = await query<any>(
     `SELECT m.tipo, COALESCE(c.nombre,'(sin categoría)') categoria, IFNULL(SUM(m.monto),0) monto, COUNT(*) n
        FROM caja_movimientos m LEFT JOIN caja_categorias c ON c.id=m.categoria_id
-      WHERE YEAR(m.fecha)=YEAR(CURDATE()) AND MONTH(m.fecha)=MONTH(CURDATE())
+      WHERE ${condPeriodo('m.fecha', periodo)}
       GROUP BY m.tipo, c.id ORDER BY m.tipo, monto DESC`);
   const caja = {
     entradas: num(cajaResumen[0].entradas),
@@ -147,9 +154,23 @@ export async function reporteGeneral() {
     'SELECT estado, COUNT(*) n FROM producciones GROUP BY estado');
 
   const ultimasVentas = await query<any>(
-    `SELECT v.folio, COALESCE(c.nombre,'Público en general') cliente, v.total importe, v.fecha, s.nombre sucursal
+    `SELECT v.id, v.folio, COALESCE(c.nombre,'Público en general') cliente, v.total importe, v.fecha, s.nombre sucursal, v.metodo_pago metodo
        FROM ventas v LEFT JOIN clientes c ON c.id=v.cliente_id JOIN sucursales s ON s.id=v.sucursal_id
       WHERE v.estado<>'cancelada' ORDER BY v.id DESC LIMIT 10`);
+  // Artículos de cada una de esas ventas (qué compró cada cliente).
+  const itemsPorVenta = new Map<number, { articulo: string; cantidad: number }[]>();
+  const ventaIds = ultimasVentas.map((v) => v.id);
+  if (ventaIds.length) {
+    const its = await query<any>(
+      `SELECT vi.venta_id, a.nombre articulo, vi.cantidad
+         FROM venta_items vi JOIN articulos a ON a.id=vi.articulo_id
+        WHERE vi.venta_id IN (${ventaIds.map(() => '?').join(',')}) ORDER BY vi.id`, ventaIds);
+    for (const it of its) {
+      const arr = itemsPorVenta.get(it.venta_id) ?? [];
+      arr.push({ articulo: it.articulo, cantidad: num(it.cantidad) });
+      itemsPorVenta.set(it.venta_id, arr);
+    }
+  }
 
   const tareasPendientes = await query<any>(
     `SELECT t.tema, ua.nombre responsable, t.fecha_limite
@@ -195,12 +216,16 @@ export async function reporteGeneral() {
   };
 
   return {
-    resumen: await resumen(),
+    periodo,
+    resumen: await resumen(periodo),
     ventasPorDia,
     topArticulos: topArticulos.map((r) => ({ nombre: r.nombre, unidades: num(r.unidades), monto: num(r.monto) })),
     ventasPorSucursal: ventasPorSucursal.map((r) => ({ nombre: r.nombre, monto: num(r.monto), n: num(r.n) })),
     ventasPorMetodo: ventasPorMetodo.map((r) => ({ metodo: r.metodo, monto: num(r.monto), n: num(r.n) })),
-    ultimasVentas: ultimasVentas.map((r) => ({ folio: r.folio, cliente: r.cliente, importe: num(r.importe), fecha: r.fecha, sucursal: r.sucursal })),
+    ultimasVentas: ultimasVentas.map((r) => ({
+      folio: r.folio, cliente: r.cliente, importe: num(r.importe), fecha: r.fecha, sucursal: r.sucursal,
+      metodo: r.metodo, items: itemsPorVenta.get(r.id) ?? [],
+    })),
     cobranza,
     deudores,
     caja,

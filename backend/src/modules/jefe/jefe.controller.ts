@@ -20,8 +20,10 @@ export async function login(req: Request, res: Response) {
   res.json(await service.login(usuario, password));
 }
 
-export async function reporte(_req: Request, res: Response) {
-  res.json(await service.reporteGeneral());
+export async function reporte(req: Request, res: Response) {
+  const p = req.query.periodo;
+  const periodo: service.Periodo = p === 'dia' || p === 'anio' ? p : 'mes';
+  res.json(await service.reporteGeneral(periodo));
 }
 
 export async function cambiarCredenciales(req: Request, res: Response) {

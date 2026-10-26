@@ -13,6 +13,10 @@ export async function reporteDia(fecha: string) {
   const ventasTot = await query<any>(
     `SELECT COUNT(*) n, IFNULL(SUM(total),0) total FROM ventas
       WHERE DATE(fecha)=? AND estado<>'cancelada' AND metodo_pago<>'cortesia'`, [fecha]);
+  // Ventas de contado del día (dinero que entró de inmediato; crédito NO cuenta hasta cobrarse).
+  const ventasContadoRow = await query<any>(
+    `SELECT IFNULL(SUM(total),0) total FROM ventas
+      WHERE DATE(fecha)=? AND estado<>'cancelada' AND metodo_pago IN ('efectivo','tarjeta','transferencia')`, [fecha]);
   const ventasPorMetodo = await query<any>(
     `SELECT metodo_pago metodo, COUNT(*) n, IFNULL(SUM(total),0) total
        FROM ventas WHERE DATE(fecha)=? AND estado<>'cancelada' GROUP BY metodo_pago ORDER BY total DESC`, [fecha]);
@@ -74,6 +78,9 @@ export async function reporteDia(fecha: string) {
       movimientosCount: movPorTipo.reduce((s, m) => s + num(m.n), 0),
       remisionesCount: remisiones.length,
       cajaEntradas: num(cajaTot[0].entradas), cajaSalidas: num(cajaTot[0].salidas),
+      // Ingreso total del día = ventas de contado + cobrado (abonos) + entradas de caja.
+      ventasContado: num(ventasContadoRow[0].total),
+      ingresoTotal: num(ventasContadoRow[0].total) + num(abonosTot[0].total) + num(cajaTot[0].entradas),
     },
     ventas: ventas.map((v) => ({ ...v, total: num(v.total) })),
     ventasPorMetodo: ventasPorMetodo.map((m) => ({ ...m, n: num(m.n), total: num(m.total) })),
