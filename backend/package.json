@@ -16,6 +16,7 @@
     "migrate:ronda2": "tsx src/db/alter-ronda2.ts",
     "migrate:mig3": "tsx src/db/alter-migracion3.ts",
     "seed:clientes-mig": "tsx src/db/seed-clientes-migracion.ts",
+    "seed:migracion": "tsx src/db/seed-migracion.ts",
     "test": "vitest run"
   },
   "dependencies": {
