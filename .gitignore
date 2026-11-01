@@ -4,3 +4,6 @@ build/
 .env
 *.log
 .DS_Store
+# Respaldos / volcados de base de datos (datos, NO van al repo)
+raices_v2_*.sql
+dump_err.txt
