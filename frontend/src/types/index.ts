@@ -11,6 +11,10 @@ export interface Cliente {
   telefono?: string | null;
   email?: string | null;
   rfc?: string | null;
+  calle?: string | null;      // domicilio (calle y número)
+  numero?: string | null;
+  colonia?: string | null;
+  cp?: string | null;
   ciudad?: string | null;
   limite_credito: number;
   activo: number;

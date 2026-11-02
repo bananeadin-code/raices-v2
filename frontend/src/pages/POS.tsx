@@ -9,6 +9,7 @@ import { Pager } from '../components/Pager';
 import { usePagedList } from '../hooks/usePagedList';
 import { BotonReporte, ColReporte } from '../components/ReportePrint';
 import { NotaPrint } from '../components/NotaPrint';
+import { ClienteFormFields, VACIO_CLIENTE } from '../components/ClienteFormFields';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 
@@ -60,6 +61,23 @@ export function POS() {
   const [abonoVenta, setAbonoVenta] = useState<VentaRow | null>(null);
   const [abono, setAbono] = useState<any>({ monto: '', metodo: 'efectivo', referencia: '' });
   const [errorAbono, setErrorAbono] = useState('');
+
+  // Alta rápida de cliente desde el POS (reusa el mismo formulario de Clientes).
+  const [modalCliente, setModalCliente] = useState(false);
+  const [nuevoCliente, setNuevoCliente] = useState<Partial<Cliente>>(VACIO_CLIENTE);
+  const [errorCliente, setErrorCliente] = useState('');
+  function abrirNuevoCliente() { setErrorCliente(''); setNuevoCliente(VACIO_CLIENTE); setModalCliente(true); }
+  async function guardarCliente() {
+    setErrorCliente('');
+    if (!nuevoCliente.nombre?.trim()) { setErrorCliente('El nombre es obligatorio.'); return; }
+    try {
+      const creado = await api.post<Cliente>('/clientes', nuevoCliente);
+      setClientes((prev) => [...prev, creado].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      setCab((c: any) => ({ ...c, cliente_id: creado.id }));
+      setModalCliente(false);
+      toast.exito('Cliente agregado');
+    } catch (e) { setErrorCliente(e instanceof Error ? e.message : 'No se pudo guardar'); }
+  }
 
   useEffect(() => {
     api.getAll<Sucursal>('/sucursales').then(setSucursales).catch(() => {});
@@ -203,9 +221,19 @@ export function POS() {
               value={cab.sucursal_id} onChange={(v) => setCab({ ...cab, sucursal_id: v })} placeholder="Selecciona sucursal" />
           </label>
           <label style={{ flex: 1 }}>Cliente
-            <Combobox opciones={clientes.map((c) => ({ value: c.id, label: c.nombre }))}
-              value={cab.cliente_id} onChange={(v) => setCab({ ...cab, cliente_id: v })}
-              vacioLabel="Público en general" placeholder="Público en general" />
+            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+              <div style={{ flex: 1 }}>
+                <Combobox opciones={clientes.map((c) => ({ value: c.id, label: c.nombre }))}
+                  value={cab.cliente_id} onChange={(v) => setCab({ ...cab, cliente_id: v })}
+                  vacioLabel="Público en general" placeholder="Público en general" />
+              </div>
+              {puede('clientes:crear') && (
+                <button type="button" className="btn-sm" onClick={abrirNuevoCliente}
+                  title="Registrar un cliente nuevo sin salir del punto de venta" style={{ flex: 'none' }}>
+                  + Nuevo
+                </button>
+              )}
+            </div>
           </label>
         </div>
 
@@ -295,6 +323,12 @@ export function POS() {
           <input value={abono.referencia} onChange={(e) => setAbono({ ...abono, referencia: e.target.value })} />
         </label>
         {errorAbono && <p className="error">{errorAbono}</p>}
+      </Modal>
+
+      {/* Alta rápida de cliente (mismo formulario que la pantalla de Clientes) */}
+      <Modal abierto={modalCliente} titulo="Nuevo cliente" onCerrar={() => setModalCliente(false)} onGuardar={guardarCliente}>
+        <ClienteFormFields form={nuevoCliente} onChange={setNuevoCliente} />
+        {errorCliente && <p className="error">{errorCliente}</p>}
       </Modal>
 
       {nota && <NotaPrint venta={nota} onClose={() => setNota(null)} />}
