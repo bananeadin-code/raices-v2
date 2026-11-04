@@ -231,6 +231,13 @@ CREATE TABLE folios (
   CONSTRAINT fk_folio_sucursal FOREIGN KEY (sucursal_id) REFERENCES sucursales(id)
 ) ENGINE=InnoDB;
 
+-- Secuencia de folios GLOBAL por tipo (una sola para todas las sucursales).
+-- Es la que usa siguienteFolio(); la tabla `folios` de arriba quedó en desuso.
+CREATE TABLE folios_seq (
+  tipo         ENUM('venta','remision','produccion') NOT NULL PRIMARY KEY,
+  ultimo_folio INT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
 CREATE TABLE ventas (
   id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   folio             INT UNSIGNED NOT NULL,

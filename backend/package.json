@@ -18,6 +18,7 @@
     "seed:clientes-mig": "tsx src/db/seed-clientes-migracion.ts",
     "seed:migracion": "tsx src/db/seed-migracion.ts",
     "seed:fabrica": "tsx src/db/seed-fabrica.ts",
+    "migrate:folios-global": "tsx src/db/alter-folios-global.ts",
     "test": "vitest run"
   },
   "dependencies": {

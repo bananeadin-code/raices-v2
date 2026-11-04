@@ -52,13 +52,15 @@ export async function ajustarReservado(
   }
 }
 
-// Folio atómico por sucursal y tipo (venta/remision/produccion). Se llama dentro de una transacción.
-export async function siguienteFolio(cx: PoolConnection, sucursalId: number, tipo: string): Promise<number> {
+// Folio atómico GLOBAL por tipo (venta/remision/produccion). Decisión del negocio:
+// una sola secuencia por tipo para TODAS las sucursales (ya no por sucursal).
+// Se conserva el parámetro sucursalId por compatibilidad con los llamadores; no se usa.
+export async function siguienteFolio(cx: PoolConnection, _sucursalId: number, tipo: string): Promise<number> {
   await cx.query(
-    `INSERT INTO folios (sucursal_id, tipo, ultimo_folio) VALUES (?, ?, 1)
+    `INSERT INTO folios_seq (tipo, ultimo_folio) VALUES (?, 1)
      ON DUPLICATE KEY UPDATE ultimo_folio = ultimo_folio + 1`,
-    [sucursalId, tipo]);
-  const [rows]: any = await cx.query('SELECT ultimo_folio FROM folios WHERE sucursal_id = ? AND tipo = ?', [sucursalId, tipo]);
+    [tipo]);
+  const [rows]: any = await cx.query('SELECT ultimo_folio FROM folios_seq WHERE tipo = ?', [tipo]);
   return rows[0].ultimo_folio;
 }
 
